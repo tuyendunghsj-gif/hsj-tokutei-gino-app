@@ -1,27 +1,25 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HSJ Tokutei Gino Wood - Ôn Thi Ngành Gỗ</title>
-    <!-- Tailwind CSS -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSJ Tokutei Gino Wood - Ôn Thi Ngành Gỗ Chuyên Sâu</title>
+    
+    <!-- 1. Thư viện giao diện Tailwind CSS (giúp bố cục tự co giãn mượt mà trên di động) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        @keyframes bounce-slow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-        .animate-bounce-slow {
-            animation: bounce-slow 2.5s infinite ease-in-out;
-        }
-    </style>
+    
+    <!-- 2. Liên kết đến file tùy chỉnh màu sắc & hiệu ứng riêng (style.css) -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Thêm font chữ tiêu chuẩn quốc tế Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- 1. MÀN HÌNH CHÀO MỞ ĐẦU (SPLASH SCREEN VỚI CON GÀ & MÀU XANH/CAM) -->
+    <!-- PHẦN 1: MÀN HÌNH CHÀO MỞ ĐẦU (SPLASH SCREEN VỚI CON GÀ & HIỆU ỨNG) -->
     <div id="splash-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-blue-800 to-orange-600 flex flex-col items-center justify-center text-white px-4 transition-opacity duration-700">
         <div class="relative mb-6">
-            <!-- Hiệu ứng vòng tròn tỏa sáng -->
             <div class="absolute -inset-4 bg-orange-500 rounded-full blur-lg opacity-40 animate-pulse"></div>
-            <!-- Icon Con Gà Đáng Yêu -->
             <div class="relative w-32 h-32 bg-white rounded-full shadow-2xl flex items-center justify-center text-6xl border-4 border-orange-400 animate-bounce-slow">
                 🐔
             </div>
@@ -30,16 +28,15 @@
         <p class="text-sm text-blue-200 mb-6 text-center">Hệ thống Đào tạo & Ôn thi Ngành Gỗ Chuẩn Nhật</p>
         
         <div class="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 mb-8">
-            <p class="text-xs font-medium text-orange-300">✨ CHÀO BẠN! CỐ GẮNG BẠN NHÉ! ✨</p>
+            <p class="text-xs font-medium text-orange-300">✨ CHÀO BẠN PHẠM THÙY TRANG! CỐ GẮNG NHÉ! ✨</p>
         </div>
 
-        <button onclick="enterApp()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition transform active:scale-95 text-base flex items-center gap-2">
+        <button onclick="enterApp()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition transform active:scale-95 text-base flex items-center gap-2 cursor-pointer">
             🚀 Bắt Đầu Ngay
         </button>
     </div>
 
-    <!-- 2. GIAO DIỆN CHÍNH CỦA ỨNG DỤNG -->
-    <!-- HEADER -->
+    <!-- PHẦN 2: HEADER (THANH TIÊU ĐỀ TRÊN CÙNG) -->
     <header class="bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-3">
@@ -58,7 +55,7 @@
         </div>
     </header>
 
-    <!-- NAVIGATION TABS -->
+    <!-- PHẦN 3: THANH ĐIỀU HƯỚNG TAB (NAVBAR) -->
     <nav class="bg-white shadow-sm overflow-x-auto whitespace-nowrap px-4 border-b border-slate-200">
         <div class="max-w-7xl mx-auto flex space-x-2 py-2">
             <button onclick="switchTab('home')" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg bg-blue-50 text-blue-800 transition">🏠 Trang Chủ</button>
@@ -69,166 +66,67 @@
         </div>
     </nav>
 
-    <!-- MAIN CONTAINER -->
+    <!-- PHẦN 4: KHUNG NỘI DUNG CHÍNH (MAIN CONTAINER) -->
     <main class="max-w-4xl mx-auto px-4 py-6 flex-grow w-full">
         
-        <!-- TAB TRANG CHỦ -->
-        <div id="tab-home" class="tab-content space-y-6">
+        <!-- Tab 1: Trang chủ -->
+        <section id="tab-home" class="tab-content space-y-6">
             <div class="bg-gradient-to-r from-blue-50 to-orange-50 border-l-4 border-blue-600 p-5 rounded-xl shadow-sm">
                 <h2 class="text-xl font-bold text-blue-900 mb-1">Xin chào, Phạm Thùy Trang! 🌟</h2>
-                <p class="text-sm text-slate-600">Hệ thống đã sẵn sàng với 1.860 câu hỏi ôn thi Tokutei Gino Ngành Gỗ. Giao diện tối ưu chuẩn màu Xanh Dương & Cam.</p>
+                <p class="text-sm text-slate-600">Hệ thống modular sẵn sàng quản lý các phần học tập và dữ liệu 1.860 câu hỏi.</p>
             </div>
+        </section>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div onclick="switchTab('practice')" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer group">
-                    <span class="text-xs bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded">Module 1</span>
-                    <h3 class="font-bold text-blue-900 mt-2 group-hover:text-blue-700">Luyện Tập Trắc Nghiệm ✍️</h3>
-                    <p class="text-xs text-slate-500 mt-1">Đọc dữ liệu trực tiếp từ file data.json chuẩn xác.</p>
-                </div>
-                <div onclick="switchTab('vocab')" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer group">
-                    <span class="text-xs bg-orange-100 text-orange-800 font-bold px-2 py-1 rounded">Module 2</span>
-                    <h3 class="font-bold text-blue-900 mt-2 group-hover:text-blue-700">Từ Vựng Chuyên Ngành 📖</h3>
-                    <p class="text-xs text-slate-500 mt-1">Tra cứu từ vựng gỗ 62 trang giáo trình.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB TỪ VỰNG -->
-        <div id="tab-vocab" class="tab-content hidden space-y-4">
+        <!-- Tab 2: Từ vựng -->
+        <section id="tab-vocab" class="tab-content hidden space-y-4">
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <h2 class="text-lg font-bold text-blue-900 mb-3">📖 Tra Cứu Từ Vựng Gỗ</h2>
-                <div class="flex gap-2 mb-4">
-                    <input type="text" placeholder="Nhập từ cần tìm..." class="flex-grow px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button class="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold">Tìm</button>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-lg border border-dashed border-slate-300 text-center">
-                    <p class="font-bold text-blue-800 text-lg">製材 (Seizai) - Gỗ xẻ</p>
-                    <p class="text-sm text-slate-600 mt-1">Quy trình cắt xẻ gỗ tròn bằng cưa vòng chuẩn JAS.</p>
-                </div>
+                <p class="text-sm text-slate-600">Nội dung từ vựng sẽ được hiển thị tại đây.</p>
             </div>
-        </div>
+        </section>
 
-        <!-- TAB LUYỆN TẬP (ĐỌC DATA.JSON) -->
-        <div id="tab-practice" class="tab-content hidden space-y-4">
+        <!-- Tab 3: Luyện tập (Trắc nghiệm từ data.json) -->
+        <section id="tab-practice" class="tab-content hidden space-y-4">
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-blue-900">✍️ Luyện Tập Trắc Nghiệm</h2>
                     <span id="quiz-progress" class="text-xs bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-full">Đang tải...</span>
                 </div>
-                
                 <div id="quiz-box" class="space-y-4">
-                    <p id="question-text" class="font-semibold text-slate-800 text-base leading-relaxed">Đang tải câu hỏi từ dữ liệu...</p>
+                    <p id="question-text" class="font-semibold text-slate-800 text-base">Đang tải câu hỏi...</p>
                     <div id="options-container" class="space-y-2"></div>
                     <div id="explanation-box" class="hidden p-3 bg-blue-50 border-l-4 border-blue-500 text-sm text-blue-900 rounded"></div>
                 </div>
-
                 <div class="flex justify-between mt-6 pt-4 border-t border-slate-100">
                     <button onclick="prevQuestion()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-300">⬅️ Câu trước</button>
                     <button onclick="nextQuestion()" class="px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-semibold hover:bg-blue-800">Câu tiếp ➡️</button>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- TAB THI THỬ -->
-        <div id="tab-exam" class="tab-content hidden space-y-4">
+        <!-- Tab 4: Thi thử -->
+        <section id="tab-exam" class="tab-content hidden space-y-4">
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center py-10">
-                <h2 class="text-lg font-bold text-blue-900 mb-2">📝 Thi Thử Mô Phỏng Tokutei Gino</h2>
-                <p class="text-sm text-slate-600 mb-6">Đề thi gồm các câu hỏi ngẫu nhiên từ ngân hàng dữ liệu để kiểm tra năng lực.</p>
-                <button onclick="alert('Tính năng thi thử sẵn sàng khi file data.json được kích hoạt!')" class="bg-orange-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-orange-700">🚀 Bắt Đầu Thi Ngay</button>
+                <h2 class="text-lg font-bold text-blue-900 mb-2">📝 Thi Thử Mô Phỏng</h2>
+                <button class="bg-orange-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-orange-700">🚀 Bắt Đầu Thi</button>
             </div>
-        </div>
+        </section>
 
-        <!-- TAB TÍNH TOÁN -->
-        <div id="tab-calc" class="tab-content hidden space-y-4">
+        <!-- Tab 5: Tính toán -->
+        <section id="tab-calc" class="tab-content hidden space-y-4">
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h2 class="text-lg font-bold text-blue-900 mb-3">🧮 Thẻ Công Thức Tính Toán Gỗ</h2>
-                <div class="p-4 bg-orange-50 border-l-4 border-orange-500 text-sm text-orange-900 rounded mb-3">
-                    <strong>Độ ẩm gỗ (%):</strong> (Khối lượng ẩm - Khối lượng khô tuyệt đối) / Khối lượng khô tuyệt đối × 100
-                </div>
-                <p class="text-sm text-slate-600">Hệ thống các bài tập thực chiến tính thể tích, quy cách và độ ẩm gỗ chuẩn bị cho kỳ thi.</p>
+                <h2 class="text-lg font-bold text-blue-900 mb-3">🧮 Thẻ Công Thức Tính Toán</h2>
             </div>
-        </div>
+        </section>
 
     </main>
 
-    <!-- FOOTER -->
+    <!-- PHẦN 5: FOOTER (CHÂN TRANG) -->
     <footer class="bg-white border-t border-slate-200 text-center py-4 text-xs text-slate-500 mt-auto">
         © 2026 Human Support Japan Co., Ltd. - Gotsu, Shimane. Developed for Phạm Thùy Trang.
     </footer>
 
-    <!-- JAVASCRIPT XỬ LÝ -->
-    <script>
-        // Hiệu ứng ấn nút bắt đầu để ẩn màn hình chào
-        function enterApp() {
-            const splash = document.getElementById('splash-screen');
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.display = 'none';
-            }, 700);
-        }
-
-        let questions = [];
-        let currentIndex = 0;
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-blue-50', 'text-blue-800');
-                btn.classList.add('text-slate-600');
-            });
-            event.currentTarget.classList.add('bg-blue-50', 'text-blue-800');
-        }
-
-        // Tải file data.json
-        fetch('data.json')
-            .then(response => response.json())
-            .then(data => {
-                questions = data;
-                if(questions.length > 0) loadQuestion();
-            })
-            .catch(error => {
-                console.log("Chưa tìm thấy file data.json:", error);
-                document.getElementById('question-text').innerText = "⚠️ Hãy đảm bảo bạn đã tải file data.json lên cùng thư mục GitHub.";
-            });
-
-        function loadQuestion() {
-            if(questions.length === 0) return;
-            let q = questions[currentIndex];
-            document.getElementById('quiz-progress').innerText = `Câu ${currentIndex + 1} / ${questions.length}`;
-            document.getElementById('question-text').innerText = q.question || q.DeBaigoc || "Nội dung câu hỏi...";
-
-            let optsContainer = document.getElementById('options-container');
-            optsContainer.innerHTML = '';
-            document.getElementById('explanation-box').classList.add('hidden');
-
-            let options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
-            
-            options.forEach(opt => {
-                let btn = document.createElement('button');
-                btn.className = "w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium transition";
-                btn.innerText = opt;
-                btn.onclick = () => selectOpt(btn, opt, q.answer || q.DapAnDung);
-                optsContainer.appendChild(btn);
-            });
-        }
-
-        function selectOpt(button, selected, correct) {
-            let buttons = document.getElementById('options-container').getElementsByTagName('button');
-            for(let b of buttons) {
-                b.disabled = true;
-                if(b.innerText.trim() === String(correct).trim()) {
-                    b.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-                }
-            }
-            if(selected.trim() === String(correct).trim()) {
-                button.classList.add('bg-green-500', 'text-white');
-            } else {
-                button.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
-            }
-
-            let expBox = document.getElementById('explanation-box');
-            expBox.innerText = "💡 Đáp án đúng: " + correct;
-            expBox.classList.remove('hidden');
-        }
+    <!-- Liên kết đến file điều khiển logic (app.js) -->
+    <script src="app.js"></script>
+</body>
+</html>
