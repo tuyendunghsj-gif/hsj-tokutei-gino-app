@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSJ Tokutei Gino Wood App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+    <!-- Màn hình chào / Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center text-white transition-opacity duration-700">
+        <h1 class="text-3xl font-bold mb-4">HSJ Tokutei Gino Wood App</h1>
+        <p class="text-slate-300 mb-6">Chương trình ôn thi Tokutei Ginou ngành Gỗ - Dành cho Phạm Thùy Trang</p>
+        <button onclick="enterApp()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg shadow-lg transition cursor-pointer">
+            Vào Ứng Dụng Ngay 🚀
+        </button>
+    </div>
+
+    <!-- Thanh Menu / Navbar -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-xl font-extrabold text-blue-600">🪚 HSJ Wood</span>
+                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">11 Chuyên Đề</span>
+            </div>
+            <div class="text-sm font-semibold text-slate-700">
+                Phạm Thùy Trang
+            </div>
+        </div>
+        <!-- Menu Tabs -->
+        <div class="max-w-7xl mx-auto px-4 flex space-x-2 overflow-x-auto py-2 border-t border-slate-100">
+            <button onclick="switchTab('home')" class="tab-btn px-4 py-2 text-sm rounded-lg font-bold bg-blue-50 text-blue-800 transition cursor-pointer whitespace-nowrap">Trang Chủ</button>
+            <button onclick="switchTab('vocab')" class="tab-btn px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap">1. Từ Vựng</button>
+            <button onclick="switchTab('quiz')" class="tab-btn px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap">2. Luyện Tập</button>
+            <button onclick="switchTab('exam')" class="tab-btn px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap">3. Thi Thử</button>
+            <button onclick="switchTab('calc')" class="tab-btn px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap">4. Tính Toán</button>
+            <button onclick="switchTab('safety')" class="tab-btn px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap">5. An Toàn</button>
+            <button onclick="switchTab('process')" class="tab-btn px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap">6. Quy Trình</button>
+        </div>
+    </header>
+
+    <!-- Nội dung các Tab -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+        
+        <!-- Tab Trang Chủ -->
+        <div id="tab-home" class="tab-content space-y-4">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-xl font-bold text-slate-800 mb-2">👋 Chào mừng bạn đến với hệ thống học tập ngành Gỗ!</h2>
+                <p class="text-slate-600 text-sm">Hệ thống đã tích hợp thành công toàn bộ 11 file dữ liệu chuyên ngành (bao gồm từ vựng, tính toán, nhận dạng và 1860 câu hỏi ôn tập)[cite: 1, 5]. Chọn mục <strong>2. Luyện Tập</strong> trên menu để bắt đầu ôn thi ngay!</p>
+            </div>
+        </div>
+
+        <!-- Tab 1: Từ Vựng -->
+        <div id="tab-vocab" class="tab-content hidden space-y-4">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-800 mb-2">📖 Kho Từ Vựng Chuyên Ngành Gỗ (TuVung.json)</h2>
+                <p class="text-slate-600 text-sm">Dữ liệu được nạp tự động từ file chuyên đề.</p>
+            </div>
+        </div>
+
+        <!-- Tab 2: Luyện Tập (Quiz) -->
+        <div id="tab-quiz" class="tab-content space-y-4">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-slate-800">📝 Luyện Tập Trắc Nghiệm (CauHoi_1860.json)</h2>
+                    <span id="quiz-progress" class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-semibold">Đang tải...</span>
+                </div>
+                
+                <!-- Khung hiển thị câu hỏi -->
+                <div id="question-text" class="text-base font-medium text-slate-900 mb-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    Đang tải câu hỏi từ hệ thống...
+                </div>
+
+                <!-- Danh sách đáp án -->
+                <div id="options-container" class="space-y-2 mb-4"></div>
+
+                <!-- Hộp giải thích -->
+                <div id="explanation-box" class="hidden p-3 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-lg mb-4"></div>
+
+                <!-- Nút điều hướng câu hỏi -->
+                <div class="flex justify-between pt-2 border-t border-slate-100">
+                    <button onclick="prevQuestion()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold rounded-lg transition cursor-pointer">
+                        ⬅️ Câu trước
+                    </button>
+                    <button onclick="nextQuestion()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition cursor-pointer">
+                        Câu tiếp ➡️
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Các Tab khác tạm ẩn/chờ -->
+        <div id="tab-exam" class="tab-content hidden"><div class="bg-white p-6 rounded-xl shadow-sm">Mục Thi Thử đang cập nhật.</div></div>
+        <div id="tab-calc" class="tab-content hidden"><div class="bg-white p-6 rounded-xl shadow-sm">Mục Tính Toán (BaiTapTinhToan.json) đang cập nhật.</div></div>
+        <div id="tab-safety" class="tab-content hidden"><div class="bg-white p-6 rounded-xl shadow-sm">Mục An Toàn (NhanDangHinhAnh.json) đang cập nhật.</div></div>
+        <div id="tab-process" class="tab-content hidden"><div class="bg-white p-6 rounded-xl shadow-sm">Mục Quy Trình (Các file GhepNoi) đang cập nhật.</div></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 text-center py-4 text-xs text-slate-500 mt-auto">
+        © 2026 Human Support Japan Co., Ltd. - Gotsu, Shimane. Developed for Phạm Thùy Trang.
+    </footer>
+
+    <!-- Khai báo các file Script theo đúng thứ tự chuẩn -->
+    <script src="app.js"></script>
+    <script src="quiz.js"></script>
+</body>
+</html>
