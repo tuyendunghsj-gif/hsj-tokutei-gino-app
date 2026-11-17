@@ -1,0 +1,158 @@
+/* ==========================================
+   1. CÀI ĐẶT CHUNG & PHÔNG CHỮ
+   ================================---------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: #f8fafc;
+    color: #1e293b;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================
+   2. MÀN HÌNH CHÀO MỞ ĐẦU (SPLASH SCREEN & VIDEO CON GÀ)
+   ================================---------- */
+#splash-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #ea580c 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    padding: 20px;
+    transition: opacity 0.7s ease-in-out, visibility 0.7s ease-in-out;
+}
+
+.splash-video-container {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 5px solid #f97316; /* Viền màu cam nổi bật */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    margin-bottom: 24px;
+    background: #ffffff;
+}
+
+.splash-video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.splash-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.splash-subtitle {
+    font-size: 14px;
+    color: #bfdbfe;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.welcome-badge {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    padding: 8px 20px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin-bottom: 32px;
+}
+
+.welcome-badge p {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fdba74; /* Màu cam nhạt sang trọng */
+    letter-spacing: 0.5px;
+}
+
+.btn-start {
+    background-color: #f97316; /* Nút màu cam chủ đạo */
+    color: #ffffff;
+    font-weight: 700;
+    padding: 12px 32px;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
+}
+
+.btn-start:hover {
+    background-color: #ea580c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
+}
+
+.btn-start:active {
+    transform: scale(0.97);
+}
+
+/* ==========================================
+   3. GIAO DIỆN CHÍNH & MÀU SẮC CHỦ ĐẠO XANH - CAM
+   ================================---------- */
+header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary-custom {
+    background-color: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.btn-primary-custom:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-accent-orange {
+    background-color: #f97316;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.btn-accent-orange:hover {
+    background-color: #ea580c;
+}
+
+/* Thanh điều hướng tab */
+nav button.active {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border-bottom: 2px solid #2563eb;
+}
+
+/* Ẩn hiện tab mượt mà */
+.tab-content {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
