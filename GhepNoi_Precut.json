@@ -1,0 +1,79 @@
+[
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": "Cột A (STT)",
+    "": "Cột B (HinhAnhURL)",
+    "__1": "Cột C (TuVungJP)",
+    "__2": "Cột D (NghiaVN)",
+    "__3": "Cột E (GiaiThich)"
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 1,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "CAD図面の受領・データ入力",
+    "__2": "Tiếp nhận bản vẽ CAD & nhập dữ liệu",
+    "__3": "Nhận hồ sơ thiết kế cấu kiện nhà gỗ từ kiến trúc sư và chuyển đổi thành mã máy."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 2,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "プレカット用材の選定・検品",
+    "__2": "Lựa chọn & kiểm tra gỗ tiền chế",
+    "__3": "Chọn các thanh gỗ cột, dầm đạt tiêu chuẩn chịu lực cao làm phôi gia công."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 3,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "横切り・長さ切断加工",
+    "__2": "Cắt cắt đứt định hình chiều dài",
+    "__3": "Cắt các thanh gỗ theo đúng kích thước nhịp khung nhà trong bản vẽ kỹ thuật."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 4,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "継手・仕口の加工（ホゾ加工）",
+    "__2": "Gia công mộng âm dương kết cấu",
+    "__3": "Dùng máy phay tự động đục các lỗ mộng, đầu mộng để liên kết cột và dầm."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 5,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "ドリフトピン穴の穿孔",
+    "__2": "Khoan lỗ chốt liên kết thép",
+    "__3": "Khoan chính xác các lỗ nhỏ để đóng chốt neo thép gia cường liên kết nhà gỗ."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 6,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "金物取り付け溝の掘削",
+    "__2": "Phay rãnh lắp bản mã kim loại",
+    "__3": "Tạo các rãnh khuyết trên thanh gỗ để âm các pat sắt, giằng chịu lực."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 7,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "プレカット加工品の精度検査",
+    "__2": "Kiểm tra độ chính xác cấu kiện",
+    "__3": "Đo đạc dung sai các mộng gỗ để chắc chắn khi lắp ráp tại công trường không bị lệch."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 8,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "部材への番号・記号の刻印 / 貼付",
+    "__2": "Đánh mã số / Ký hiệu lên cấu kiện",
+    "__3": "Dán tem hoặc in mã định danh (ví dụ: 1-A, 2-B) để thợ dễ lắp ráp ở công trình."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 9,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "パレット積み・雨よけ養生梱包",
+    "__2": "Xếp pallet & bọc chống ẩm mốc",
+    "__3": "Bọc màng bảo vệ các cấu kiện gỗ đã gia công tránh ẩm ướt trong quá trình vận chuyển."
+  },
+  {
+    "BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)": 10,
+    "": "https://drive.google.com/file/d/1vLHJTcf3D67FZVFHioHkvOzbRlCo67sU/view?usp=drive_link",
+    "__1": "現場への納品・出荷管理",
+    "__2": "Giao hàng đến công trường & quản lý xuất xưởng",
+    "__3": "Vận chuyển trọn bộ cấu kiện nhà tiền chế đến tận công trường xây dựng."
+  }
+]
