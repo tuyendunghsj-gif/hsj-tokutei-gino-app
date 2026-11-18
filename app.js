@@ -295,17 +295,17 @@ function toggleAnswer(index) {
     }
 }
 
-// Hàm chuẩn hóa link Google Drive sang định dạng hiển thị ảnh trực tiếp (Direct Link)
-function convertDriveLink(url) {
+// Hàm chuyển đổi link Google Drive sang dạng nhúng xem trước (Preview/Embed URL)
+function convertDriveEmbedLink(url) {
     if (!url) return "";
     let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
-        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
     }
     return url;
 }
 
-// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Hiển thị ảnh nét căng từ link Drive & chọn nhiều đáp án màu vàng)
+// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Dùng iframe nhúng chuẩn Google Drive)
 function hienThiNhanDangAnToan(danhSach) {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -336,7 +336,7 @@ function hienThiNhanDangAnToan(danhSach) {
         let dapan = item.DapAnDung || "";
         
         let rawImgUrl = item.HinhAnhURL || item.LinkAnh || item.Image || "";
-        let imgUrl = convertDriveLink(rawImgUrl);
+        let embedUrl = convertDriveEmbedLink(rawImgUrl);
 
         let luachonList = [
             { text: item.LuaChon_A },
@@ -354,10 +354,10 @@ function hienThiNhanDangAnToan(danhSach) {
                     <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
                 </div>
 
-                <!-- Hiển thị Hình ảnh minh họa trực tiếp từ link Google Drive -->
-                ${imgUrl ? `
-                    <div class="flex flex-col items-center justify-center bg-slate-900 rounded-xl p-3 border border-slate-300 shadow-inner">
-                        <img src="${imgUrl}" alt="Ảnh minh họa an toàn ${index + 1}" class="max-h-[320px] object-contain rounded-lg shadow-md" onerror="this.parentElement.style.display='none';">
+                <!-- Hiển thị Hình ảnh minh họa chuẩn nhúng iframe Google Drive -->
+                ${embedUrl ? `
+                    <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner flex justify-center">
+                        <iframe src="${embedUrl}" class="w-full h-[320px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
                     </div>
                 ` : ''}
 
@@ -517,4 +517,10 @@ function nextQuestion() {
 function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
+
+
+  
+
+
+ 
       
