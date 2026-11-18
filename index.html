@@ -10,7 +10,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- MÀN HÌNH CHÀO MỞ ĐẦU VỚI ẢNH ĐỘNG GIF VÀ PHÁT ÂM THANH LỜI CHÀO -->
+    <!-- MÀN HÌNH CHÀO MỞ ĐẦU VỚI ẢNH ĐỘNG GIF VÀ ÂM THANH CHÀO MỪNG -->
     <div id="splash-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-blue-800 to-orange-600 flex flex-col items-center justify-center text-white px-4 transition-opacity duration-700">
         
         <!-- Khung tròn chứa Ảnh động GIF conga.gif -->
@@ -21,7 +21,7 @@
         <!-- Bong bóng lời thoại chào mừng -->
         <div class="relative bg-white text-slate-900 px-5 py-2.5 rounded-2xl shadow-xl mb-5 max-w-xs text-center border border-orange-200 animate-bounce">
             <div class="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-t border-l border-orange-200"></div>
-            <p id="greeting-text" class="text-xs font-bold text-orange-600">💬 "Chào bạn Phạm Thùy Trang! Cùng cố gắng vượt qua kỳ thi nhé!"</p>
+            <p class="text-xs font-bold text-orange-600">💬 "Chào bạn Phạm Thùy Trang! Cùng cố gắng vượt qua kỳ thi nhé!"</p>
         </div>
 
         <h1 class="text-2xl font-bold tracking-wide text-center mb-1">HSJ Tokutei Gino Wood</h1>
@@ -210,22 +210,21 @@
 
     <script src="app.js"></script>
     <script>
-        // Tự động phát âm thanh lời chào khi trang vừa tải xong
+        // Tự động phát âm thanh lời chào khi mở trang
         window.addEventListener('DOMContentLoaded', () => {
             if ('speechSynthesis' in window) {
                 const text = "Chào bạn Phạm Thùy Trang! Cùng cố gắng vượt qua kỳ thi nhé!";
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'vi-VN';
-                utterance.rate = 1.0; // Tốc độ đọc
-                utterance.pitch = 1.1; // Tông giọng tươi vui
-                // Trì hoãn 1 giây để trang load ổn định rồi đọc
+                utterance.rate = 1.0;
+                utterance.pitch = 1.1;
                 setTimeout(() => {
                     window.speechSynthesis.speak(utterance);
                 }, 1000);
             }
         });
 
-        // Hàm khi bấm nút Bắt Đầu Ngay (tắt âm thanh nếu đang đọc và vào app)
+        // Hàm khi bấm nút Bắt Đầu Ngay
         function enterAppWithSound() {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
