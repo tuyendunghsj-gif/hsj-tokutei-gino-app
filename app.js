@@ -208,7 +208,7 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// Hiển thị chuẩn xác Bài Tập Tính Toán (Khớp tuyệt đối với cấu trúc file JSON có các trường __2, __3, __4, __5)
+// Hiển thị Bài Tập Tính Toán với tính năng Ẩn/Hiện Đáp án thông minh
 function hienThiBaiTapTinhToan(danhSach) {
     let calcTab = document.getElementById('tab-calc') || 
                   document.getElementById('tab-tinh-toan') || 
@@ -222,14 +222,13 @@ function hienThiBaiTapTinhToan(danhSach) {
     }
     if (!calcTab) return;
 
-    // Lọc lấy các bài tập có chứa nội dung đề bài (trường __2 hoặc DeBaigoc)
     let danhSachBaiTap = danhSach.filter(item => item.__2 || item.DeBaigoc || item.question);
 
     let htmlNoiDung = `
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="border-b pb-3">
                 <h2 class="text-lg font-bold text-blue-900">🧮 Bài Tập Tính Toán Thực Chiến Ngành Gỗ</h2>
-                <p class="text-xs text-slate-500">計算問題 (Keisan Mondai) - Tổng số: ${danhSachBaiTap.length} bài tập</p>
+                <p class="text-xs text-slate-500">計算問題 (Keisan Mondai) - Tổng số: ${danhSachBaiTap.length} bài tập (Đáp án được ẩn để luyện tập)</p>
             </div>
             <div class="space-y-4 max-h-[650px] overflow-y-auto pr-2">
     `;
@@ -251,15 +250,41 @@ function hienThiBaiTapTinhToan(danhSach) {
                 <div class="text-slate-900 font-semibold text-base whitespace-pre-line bg-white p-3 rounded-lg border border-slate-100">
                     📝 ${debaigoc}
                 </div>
-                ${congthuc ? `<div class="p-3 bg-blue-50 text-blue-900 rounded-lg text-sm border border-blue-100"><strong>📐 Công thức:</strong> ${congthuc}</div>` : ''}
-                ${buocgiai ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Các bước giải:</strong><br>${buocgiai}</div>` : ''}
-                ${dapan ? `<div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">✅ Đáp án: ${dapan}</div>` : ''}
+                
+                <!-- Nút bấm ẩn/hiện đáp án -->
+                <button onclick="toggleAnswer(${index})" id="btn-answer-${index}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
+                    <span>👁️ Xem đáp án & Hướng dẫn giải</span>
+                </button>
+
+                <!-- Khung chứa đáp án (Mặc định bị ẩn đi) -->
+                <div id="answer-box-${index}" class="hidden space-y-3 pt-3 border-t border-slate-200">
+                    ${congthuc ? `<div class="p-3 bg-blue-50 text-blue-900 rounded-lg text-sm border border-blue-100"><strong>📐 Công thức:</strong> ${congthuc}</div>` : ''}
+                    ${buocgiai ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Các bước giải:</strong><br>${buocgiai}</div>` : ''}
+                    ${dapan ? `<div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">✅ Đáp án: ${dapan}</div>` : ''}
+                </div>
             </div>
         `;
     });
 
     htmlNoiDung += `</div></div>`;
     calcTab.innerHTML = htmlNoiDung;
+}
+
+// Hàm xử lý bật/tắt hiển thị đáp án cho từng bài tập cụ thể
+function toggleAnswer(index) {
+    let box = document.getElementById(`answer-box-${index}`);
+    let btn = document.getElementById(`btn-answer-${index}`);
+    if (box && btn) {
+        if (box.classList.contains('hidden')) {
+            box.classList.remove('hidden');
+            btn.innerHTML = `<span>🙈 Thu gọn đáp án</span>`;
+            btn.className = "px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
+        } else {
+            box.classList.add('hidden');
+            btn.innerHTML = `<span>👁️ Xem đáp án & Hướng dẫn giải</span>`;
+            btn.className = "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
+        }
+    }
 }
 
 function renderQuestion() {
