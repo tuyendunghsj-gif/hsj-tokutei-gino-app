@@ -27,13 +27,9 @@ let duLieuQuyTrinhKho = {
     seizai: []
 };
 
-// Lưu trữ trạng thái sắp xếp hiện tại của người dùng
-let userSequenceState = [];
-
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("🚀 Đang khởi động hệ thống nạp dữ liệu HSJ Wood...");
     await taiTatCaDuLieu();
-    await taiRiengTatCaFileQuyTrinh();
 });
 
 function enterApp() {
@@ -54,8 +50,7 @@ function switchTab(rawTabId) {
                     document.getElementById(tabId) || 
                     document.getElementById('tab-quy-trinh') || 
                     document.getElementById('tab-workflow') || 
-                    document.getElementById('tab-6') ||
-                    document.getElementById('process');
+                    document.getElementById('tab-6');
 
     if (!activeTab) {
         let tabs = document.querySelectorAll('.tab-content');
@@ -69,6 +64,7 @@ function switchTab(rawTabId) {
                     
     if (activeTab) {
         activeTab.classList.remove('hidden');
+        console.log("✅ Đã kích hoạt hiển thị tab thành công.");
     }
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -90,7 +86,7 @@ function switchTab(rawTabId) {
     } else if (tabId.includes('5') || tabId.includes('safety') || tabId.includes('an-toan')) {
         taiRiengFileAnToan();
     } else if (tabId.includes('6') || tabId.includes('process') || tabId.includes('workflow') || tabId.includes('quy') || tabId.includes('trinh')) {
-        hienThiGiaoDienQuyTrinh('precut');
+        taiRiengTatCaFileQuyTrinh();
     } else if (tabId.includes('2') || tabId.includes('3') || tabId.includes('practice') || tabId.includes('exam')) {
         questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
         if (questions.length === 0) questions = tatCaDuLieuKho;
@@ -293,47 +289,8 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH & MINI-GAME SẮP XẾP =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (CHỈ HIỂN THỊ 1 ẢNH DUY NHẤT CHO MỖI QUY TRÌNH) =================
 async function taiRiengTatCaFileQuyTrinh() {
-    if (duLieuQuyTrinhKho.precut.length > 0) return;
-
-    const filesMap = {
-        precut: "GhepNoi_Precut.json",
-        seizai: "GhepNoi_Seizai.json",
-        shuuseizai: "GhepNoi_Shuuseizai.json",
-        goubanLVL: "GhepNoi_GoubanLVL.json",
-        flooring: "GhepNoi_Flooring.json",
-        tsukita: "GhepNoi_Tsukita.json",
-        chip: "GhepNoi_Chip.json"
-    };
-
-    for (let key in filesMap) {
-        try {
-            let res = await fetch(`./${filesMap[key]}`);
-            if (res.ok) {
-                let data = await res.json();
-                if (Array.isArray(data) && data.length > 1) {
-                    let danhSachbuoc = data.slice(1).map((item, idx) => {
-                        let values = Object.values(item);
-                        return {
-                            stt: Number(values[0]) || (idx + 1),
-                            hinhAnh: values[1] || "",
-                            tuVungJP: values[2] || "",
-                            nghiaVN: values[3] || "",
-                            giaiThich: values[4] || ""
-                        };
-                    }).filter(item => item.tuVungJP);
-
-                    duLieuQuyTrinhKho[key] = danhSachbuoc;
-                }
-            }
-        } catch(e) {}
-    }
-}
-
-async function hienThiGiaoDienQuyTrinh(loaiHienTai) {
-    await taiRiengTatCaFileQuyTrinh();
-
     let workflowTab = document.getElementById('process') || 
                       document.getElementById('tab-process') || 
                       document.getElementById('tab-workflow') || 
@@ -347,15 +304,60 @@ async function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     }
     if (!workflowTab) return;
 
-    let danhSachGoc = duLieuQuyTrinhKho[loaiHienTai] || [];
+    workflowTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải dữ liệu quy trình sản xuất...</div>`;
 
-    // Khởi tạo mảng xáo trộn ngẫu nhiên nếu chưa có hoặc đổi loại quy trình
-    if (!window.shuffledState || window.shuffledStateKey !== loaiHienTai) {
-        window.shuffledStateKey = loaiHienTai;
-        window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
+    if (duLieuQuyTrinhKho.precut.length === 0) {
+        const filesMap = {
+            precut: "GhepNoi_Precut.json",
+            seizai: "GhepNoi_Seizai.json",
+            shuuseizai: "GhepNoi_Shuuseizai.json",
+            goubanLVL: "GhepNoi_GoubanLVL.json",
+            flooring: "GhepNoi_Flooring.json",
+            tsukita: "GhepNoi_Tsukita.json",
+            chip: "GhepNoi_Chip.json"
+        };
+
+        for (let key in filesMap) {
+            try {
+                let res = await fetch(`./${filesMap[key]}`);
+                if (res.ok) {
+                    let data = await res.json();
+                    if (Array.isArray(data) && data.length > 1) {
+                        let danhSachbuoc = data.slice(1).map((item, idx) => {
+                            let values = Object.values(item);
+                            return {
+                                stt: values[0] || (idx + 1),
+                                hinhAnh: values[1] || "",
+                                tuVungJP: values[2] || "",
+                                nghiaVN: values[3] || "",
+                                giaiThich: values[4] || ""
+                            };
+                        }).filter(item => item.tuVungJP);
+
+                        duLieuQuyTrinhKho[key] = danhSachbuoc;
+                    }
+                }
+            } catch(e) {}
+        }
     }
 
-    let danhSachHienTai = window.shuffledState;
+    hienThiGiaoDienQuyTrinh('precut');
+}
+
+function hienThiGiaoDienQuyTrinh(loaiHienTai) {
+    let workflowTab = document.getElementById('process') || 
+                      document.getElementById('tab-process') || 
+                      document.getElementById('tab-workflow') || 
+                      document.getElementById('tab-quy-trinh') || 
+                      document.getElementById('tab-6') || 
+                      document.getElementById('workflow');
+    if (!workflowTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
+    }
+    if (!workflowTab) return;
+
+    let danhSachHienTai = duLieuQuyTrinhKho[loaiHienTai] || [];
 
     let menuNutBam = [
         { id: 'precut', name: '🏠 Nhà Gỗ Pre-cut' },
@@ -367,20 +369,16 @@ async function hienThiGiaoDienQuyTrinh(loaiHienTai) {
         { id: 'chip', name: '🪵 Dăm Gỗ / Bột Giấy' }
     ];
 
-    let anhDaiDien = (danhSachGoc.length > 0 && danhSachGoc[0].hinhAnh) ? danhSachGoc[0].hinhAnh : "";
+    // Lấy ảnh đại diện từ bước đầu tiên của quy trình hiện tại
+    let anhDaiDien = (danhSachHienTai.length > 0 && danhSachHienTai[0].hinhAnh) ? danhSachHienTai[0].hinhAnh : "";
     let embedUrl = convertDriveEmbedLink(anhDaiDien);
     let directUrl = convertDriveDirectLink(anhDaiDien);
 
     let htmlNoiDung = `
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
-            <div class="border-b pb-3 flex justify-between items-center flex-wrap gap-2">
-                <div>
-                    <h2 class="text-lg font-bold text-blue-900">⚙️ 6. Quy Trình Sản Xuất & Ghép Nối Chuyên Ngành Gỗ</h2>
-                    <p class="text-xs text-slate-500">🎮 Thực hành: Sắp xếp các bước quy trình theo đúng thứ tự thực tế</p>
-                </div>
-                <button onclick="xaoTronLaiQuyTrinh('${loaiHienTai}')" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition shadow-xs cursor-pointer">
-                    🔀 Đảo lại vị trí các bước
-                </button>
+            <div class="border-b pb-3">
+                <h2 class="text-lg font-bold text-blue-900">⚙️ 6. Quy Trình Sản Xuất & Ghép Nối Chuyên Ngành Gỗ</h2>
+                <p class="text-xs text-slate-500">木材加工・製造工程 (Kotei Mondai) - Hệ thống 7 quy trình thực chiến</p>
             </div>
 
             <!-- Thanh chọn loại quy trình -->
@@ -390,7 +388,7 @@ async function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     menuNutBam.forEach(item => {
         let activeClass = (item.id === loaiHienTai) ? "bg-blue-600 text-white font-bold shadow-sm" : "bg-slate-100 hover:bg-slate-200 text-slate-700";
         htmlNoiDung += `
-            <button onclick="chuyenDoiQuyTrinh('${item.id}')" class="px-3.5 py-2 rounded-xl text-xs transition cursor-pointer ${activeClass}">
+            <button onclick="hienThiGiaoDienQuyTrinh('${item.id}')" class="px-3.5 py-2 rounded-xl text-xs transition cursor-pointer ${activeClass}">
                 ${item.name}
             </button>
         `;
@@ -399,11 +397,11 @@ async function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     htmlNoiDung += `
             </div>
 
-            <!-- 1 ẢNH SƠ ĐỒ ĐẠI DIỆN DUY NHẤT -->
+            <!-- HIỂN THỊ 1 ẢNH SƠ ĐỒ ĐẠI DIỆN DUY NHẤT Ở ĐẦU QUY TRÌNH -->
             ${embedUrl ? `
                 <div class="w-full bg-slate-900 rounded-xl p-3 border border-slate-300 shadow-md space-y-2">
-                    <div class="text-xs text-slate-200 font-bold uppercase tracking-wider text-center pb-1">🗺️ Sơ đồ tổng quan quy trình sản xuất (Tham khảo)</div>
-                    <iframe src="${embedUrl}" class="w-full h-[280px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
+                    <div class="text-xs text-slate-200 font-bold uppercase tracking-wider text-center pb-1">🗺️ Sơ đồ tổng quan quy trình sản xuất</div>
+                    <iframe src="${embedUrl}" class="w-full h-[320px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
                     <div class="text-center pt-1">
                         <a href="${directUrl}" target="_blank" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 font-semibold transition">
                             <span>🔗 Mở sơ đồ lớn trên Google Drive</span>
@@ -412,105 +410,37 @@ async function hienThiGiaoDienQuyTrinh(loaiHienTai) {
                 </div>
             ` : ''}
 
-            <div class="p-3 bg-blue-50 text-blue-900 rounded-xl text-xs font-semibold flex items-center justify-between border border-blue-200">
-                <span>👉 Hãy bấm nút ⬆️ ⬇️ để di chuyển các bước về đúng vị trí từ 1 đến 10. Khi hoàn thành, hệ thống sẽ tự chấm điểm!</span>
-                <span id="status-badge-${loaiHienTai}" class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full font-bold">⏳ Đang sắp xếp...</span>
-            </div>
-
-            <!-- DANH SÁCH BƯỚC ĐỂ SẮP XẾP -->
-            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2" id="list-container-${loaiHienTai}">
+            <!-- DANH SÁCH CÁC BƯỚC / TỪ VỰNG TRONG QUY TRÌNH -->
+            <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
     `;
 
-    danhSachHienTai.forEach((item, index) => {
-        htmlNoiDung += `
-            <div class="step-card p-3.5 bg-slate-50 border border-slate-200 rounded-xl shadow-2xs flex items-center justify-between gap-3 transition" data-stt="${item.stt}">
-                <div class="flex items-center space-x-3">
-                    <div class="flex flex-col gap-1">
-                        <button onclick="diChuyenBuoc('${loaiHienTai}', ${index}, -1)" class="w-6 h-6 bg-slate-200 hover:bg-blue-600 hover:text-white rounded text-xs font-bold transition cursor-pointer flex items-center justify-center" title="Đưa lên">▲</button>
-                        <button onclick="diChuyenBuoc('${loaiHienTai}', ${index}, 1)" class="w-6 h-6 bg-slate-200 hover:bg-blue-600 hover:text-white rounded text-xs font-bold transition cursor-pointer flex items-center justify-center" title="Đưa xuống">▼</button>
-                    </div>
-                    <span class="w-8 h-8 flex items-center justify-center bg-blue-900 text-white font-bold rounded-lg text-xs shrink-0">#${index + 1}</span>
-                    <div>
-                        <div class="text-slate-900 font-bold text-sm">🇯🇵 ${item.tuVungJP}</div>
-                        <div class="text-slate-600 text-xs italic">🇻🇳 ${item.nghiaVN}</div>
-                    </div>
-                </div>
-                ${item.giaiThich ? `<div class="hidden md:block text-[11px] text-slate-500 max-w-xs truncate" title="${item.giaiThich}">💡 ${item.giaiThich}</div>` : ''}
-            </div>
-        `;
-    });
-
-    htmlNoiDung += `</div>
-            <div class="pt-2 text-center">
-                <button onclick="kiemTraKetQuaQuyTrinh('${loaiHienTai}')" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition shadow-sm cursor-pointer inline-flex items-center space-x-2">
-                    <span>✨ Kiểm tra kết quả sắp xếp</span>
-                </button>
-            </div>
-        </div>`;
-
-    workflowTab.innerHTML = htmlNoiDung;
-}
-
-function chuyenDoiQuyTrinh(loaiID) {
-    window.shuffledStateKey = loaiID;
-    let danhSachGoc = duLieuQuyTrinhKho[loaiID] || [];
-    window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
-    hienThiGiaoDienQuyTrinh(loaiID);
-}
-
-function xaoTronLaiQuyTrinh(loaiID) {
-    let danhSachGoc = duLieuQuyTrinhKho[loaiID] || [];
-    window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
-    hienThiGiaoDienQuyTrinh(loaiID);
-}
-
-function diChuyenBuoc(loaiID, index, direction) {
-    let list = window.shuffledState;
-    let targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= list.length) return;
-
-    let temp = list[index];
-    list[index] = list[targetIndex];
-    list[targetIndex] = temp;
-
-    hienThiGiaoDienQuyTrinh(loaiID);
-}
-
-function kiemTraKetQuaQuyTrinh(loaiID) {
-    let currentList = window.shuffledState;
-    let cards = document.querySelectorAll(`#list-container-${loaiID} .step-card`);
-    let badge = document.getElementById(`status-badge-${loaiID}`);
-
-    let isAllCorrect = true;
-
-    currentList.forEach((item, index) => {
-        if (item.stt === (index + 1)) {
-            if (cards[index]) {
-                cards[index].classList.remove('bg-red-50', 'border-red-300');
-                cards[index].classList.add('bg-green-50', 'border-green-400');
-            }
-        } else {
-            isAllCorrect = false;
-            if (cards[index]) {
-                cards[index].classList.remove('bg-green-50', 'border-green-400');
-                cards[index].classList.add('bg-red-50', 'border-red-300');
-            }
-        }
-    });
-
-    if (isAllCorrect) {
-        if (badge) {
-            badge.className = "px-2.5 py-1 bg-green-100 text-green-800 rounded-full font-bold";
-            badge.innerText = "🎉 Chính xác tuyệt đối 100%!";
-        }
-        alert("🎉 Chúc mừng bạn! Bạn đã sắp xếp đúng toàn bộ các bước trong quy trình sản xuất!");
+    if (danhSachHienTai.length === 0) {
+        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Đang tải dữ liệu quy trình...</div>`;
     } else {
-        if (badge) {
-            badge.className = "px-2.5 py-1 bg-red-100 text-red-800 rounded-full font-bold";
-            badge.innerText = "❌ Có bước chưa đúng vị trí!";
-        }
-        alert("❌ Vẫn còn bước sắp xếp sai (hiển thị khung đỏ). Bạn hãy điều chỉnh lại vị trí các bước và kiểm tra lại nhé!");
+        danhSachHienTai.forEach((item, index) => {
+            htmlNoiDung += `
+                <div class="p-4 bg-gradient-to-r from-blue-50/20 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full font-bold">Bước #${item.stt || (index + 1)}</span>
+                    </div>
+
+                    <div class="space-y-1 bg-white p-3 rounded-lg border border-slate-100">
+                        <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${item.tuVungJP}</div>
+                        <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-1">🇻🇳 ${item.nghiaVN}</div>
+                    </div>
+
+                    ${item.giaiThich ? `
+                        <div class="p-2.5 bg-slate-100 text-slate-800 rounded-lg text-xs whitespace-pre-line border border-slate-200">
+                            <strong>💡 Giải thích chi tiết:</strong> ${item.giaiThich}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
     }
+
+    htmlNoiDung += `</div></div>`;
+    workflowTab.innerHTML = htmlNoiDung;
 }
 
 function toggleSafetyOption(element) {
