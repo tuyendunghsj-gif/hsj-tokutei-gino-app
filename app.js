@@ -433,7 +433,16 @@ async function batDauThiThu(deSo) {
         if (res.ok) {
             let data = await res.json();
             if (Array.isArray(data) && data.length > 1) {
-                dsQuyTrinhItem = data.slice(1);
+                dsQuyTrinhItem = data.slice(1).map((item, idx) => {
+                    let values = Object.values(item);
+                    return {
+                        stt: values[0] || (idx + 1),
+                        hinhAnh: values[1] || "",
+                        tuVungJP: values[2] || "",
+                        nghiaVN: values[3] || "",
+                        giaiThich: values[4] || ""
+                    };
+                }).filter(item => item.tuVungJP);
             }
         }
     } catch (e) {}
@@ -475,21 +484,55 @@ function renderGiaoDienLamBaiThi(deSo) {
     let q = examQuestions[examCurrentIndex];
     let totalQ = examQuestions.length;
 
-    let tieudeCau = q.TieuDeCau || q.TieuDe || (examCurrentIndex === 32 ? "🛡️ Câu hỏi An toàn vệ sinh" : examCurrentIndex === 33 ? "🧮 Bài tập Tính toán thực chiến" : examCurrentIndex === 34 ? "⚙️ Câu hỏi Quy trình sản xuất" : `Câu ${examCurrentIndex + 1}`);
-    let noidungJP = q.NoiDungJP || q.question || q.DeBaigocJP || q.DeBaigoc || q.__2 || q.tuVungJP || "";
-    let noidungVN = q.NoiDungVN || q.DeBaigocVN || q.nghiaVN || "";
-    
-    let rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
-    let embedUrl = convertDriveEmbedLink(rawImgUrl);
-    let directUrl = convertDriveDirectLink(rawImgUrl);
+    // Phân loại nguồn câu hỏi để bóc tách chính xác tên trường dữ liệu
+    let tieudeCau = "";
+    let noidungJP = "";
+    let noidungVN = "";
+    let rawImgUrl = "";
+    let options = [];
 
-    let options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
-    if (options.length === 0) {
-        let lC = [q.LuaChon_A, q.LuaChon_I, q.LuaChon_U, q.LuaChon_E, q.LuaChon_O, q.LuaChon_Ka].filter(Boolean);
-        if (lC.length > 0) options = lC;
-        else options = ["〇 (Đúng)", "✖ (Sai)"];
+    if (examCurrentIndex === 32) {
+        // CÂU 33: An toàn / Nhận dạng hình ảnh (NhanDangHinhAnh.json)
+        tieudeCau = q.TieuDeCau || "🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Nguy Cơ";
+        noidungJP = q.DeBaigocJP || q.NoiDungJP || "";
+        noidungVN = q.DeBaigocVN || q.NoiDungVN || "";
+        rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
+        options = [q.LuaChon_A, q.LuaChon_I, q.LuaChon_U, q.LuaChon_E, q.LuaChon_O, q.LuaChon_Ka].filter(Boolean);
+    } else if (examCurrentIndex === 33) {
+        // CÂU 34: Bài tập tính toán (BaiTapTinhToan.json)
+        tieudeCau = q.__1 || q.TieuDeBai || "🧮 Bài Tập Tính Toán Thực Chiến Ngành Gỗ";
+        noidungJP = q.__2 || q.DeBaigoc || q.question || "";
+        noidungVN = q.__4 || q.CacBướcGiai || q.GiaiThich || "";
+        rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
+        options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
+        if (options.length === 0 && q.__5) {
+            options = [q.__5, "Đáp án khác A", "Đáp án khác B", "Đáp án khác C"];
+        }
+    } else if (examCurrentIndex === 34) {
+        // CÂU 35: Quy trình sản xuất (GhepNoi_*.json)
+        tieudeCau = "⚙️ Câu hỏi Quy trình sản xuất & Ghép nối";
+        noidungJP = q.tuVungJP || "";
+        noidungVN = q.nghiaVN || "";
+        rawImgUrl = q.hinhAnh || "";
+        options = [
+            `Đúng quy trình bước #${q.stt || 'thực tế'}`,
+            "Sai thứ tự quy trình sản xuất"
+        ];
+    } else {
+        // CÂU 1 - 32: Kho 1860 câu
+        tieudeCau = q.TieuDeCau || q.TieuDe || `Câu ${examCurrentIndex + 1}`;
+        noidungJP = q.NoiDungJP || q.question || q.DeBaigoc || "";
+        noidungVN = q.NoiDungVN || "";
+        rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
+        options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
     }
 
+    if (options.length === 0) {
+        options = ["〇 (Đúng)", "✖ (Sai)"];
+    }
+
+    let embedUrl = convertDriveEmbedLink(rawImgUrl);
+    let directUrl = convertDriveDirectLink(rawImgUrl);
     let selectedOpt = examUserAnswers[examCurrentIndex] || "";
 
     let htmlNoiDung = `
@@ -539,7 +582,7 @@ function renderGiaoDienLamBaiThi(deSo) {
         let optText = typeof opt === 'object' ? (opt.text || JSON.stringify(opt)) : String(opt);
         let isChecked = selectedOpt === optText ? "bg-blue-100 border-blue-500 text-blue-950 font-bold shadow-xs" : "bg-white hover:bg-slate-100 border-slate-200 text-slate-800 font-medium";
         htmlNoiDung += `
-            <div onclick="chonDapAnThiThu('${optText.replace(/'/g, "\\'")}')" class="p-3.5 border rounded-xl text-sm transition cursor-pointer flex items-center space-x-3 select-none ${isChecked}">
+            <div onclick="chonDapAnThiThu(${JSON.stringify(optText).replace(/"/g, '&quot;')})" class="p-3.5 border rounded-xl text-sm transition cursor-pointer flex items-center space-x-3 select-none ${isChecked}">
                 <div class="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-700 font-bold text-xs shrink-0 border">
                     ${selectedOpt === optText ? '✓' : '◯'}
                 </div>
