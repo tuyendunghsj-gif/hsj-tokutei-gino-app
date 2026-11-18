@@ -40,32 +40,32 @@ function enterApp() {
     }
 }
 
-function switchTab(tabId) {
+// Hàm chuyển tab thông minh: Tự động xử lý mọi định dạng ID từ HTML
+function switchTab(rawTabId) {
+    let tabId = String(rawTabId || '').toLowerCase().replace('tab-', '');
     console.log("📌 Đang chuyển sang tab:", tabId);
+
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     
     let activeTab = document.getElementById('tab-' + tabId) || 
+                    document.getElementById(tabId) || 
                     document.getElementById('tab-quy-trinh') || 
                     document.getElementById('tab-workflow') || 
-                    document.getElementById('tab-6') || 
-                    document.getElementById('workflow') ||
-                    document.getElementById(tabId);
+                    document.getElementById('tab-6');
 
     if (!activeTab) {
         let tabs = document.querySelectorAll('.tab-content');
-        if (tabId === 'vocab' || tabId === '1') activeTab = tabs[0];
-        else if (tabId === 'practice' || tabId === '2') activeTab = tabs[1];
-        else if (tabId === 'exam' || tabId === '3') activeTab = tabs[2];
-        else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4') activeTab = tabs[3];
-        else if (tabId === 'safety' || tabId === 'an-toan' || tabId === '5') activeTab = tabs[4];
-        else if (tabId === 'workflow' || tabId === 'quy-trinh' || tabId === '6') activeTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
+        if (tabId.includes('1') || tabId.includes('vocab')) activeTab = tabs[0];
+        else if (tabId.includes('2') || tabId.includes('practice')) activeTab = tabs[1];
+        else if (tabId.includes('3') || tabId.includes('exam')) activeTab = tabs[2];
+        else if (tabId.includes('4') || tabId.includes('calc') || tabId.includes('tinh')) activeTab = tabs[3];
+        else if (tabId.includes('5') || tabId.includes('safety') || tabId.includes('an-toan')) activeTab = tabs[4];
+        else activeTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
     }
                     
     if (activeTab) {
         activeTab.classList.remove('hidden');
-        console.log("✅ Đã kích hoạt hiển thị tab:", activeTab.id || "không rõ ID");
-    } else {
-        console.error("⚠️ Không tìm thấy khung hiển thị tab tương ứng!");
+        console.log("✅ Đã kích hoạt hiển thị tab thành công.");
     }
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -78,17 +78,17 @@ function switchTab(tabId) {
         event.currentTarget.classList.add('bg-blue-50', 'text-blue-800', 'font-bold');
     }
 
-    if (tabId === 'vocab') {
+    if (tabId.includes('1') || tabId.includes('vocab')) {
         let danhSachTuVung = tatCaDuLieuKho.filter(item => item.TuVungJP || item.ID_TuVung);
         if (danhSachTuVung.length > 0) hienThiDanhSachTuVung(danhSachTuVung);
         else taiRiengFileVocab();
-    } else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4' || tabId === 'tinh_toan') {
+    } else if (tabId.includes('4') || tabId.includes('calc') || tabId.includes('tinh')) {
         taiRiengFileTinhToan();
-    } else if (tabId === 'safety' || tabId === 'an-toan' || tabId === '5') {
+    } else if (tabId.includes('5') || tabId.includes('safety') || tabId.includes('an-toan')) {
         taiRiengFileAnToan();
-    } else if (tabId === 'workflow' || tabId === 'quy-trinh' || tabId === '6' || tabId === 'quy_trinh') {
+    } else if (tabId.includes('6') || tabId.includes('workflow') || tabId.includes('quy') || tabId.includes('trinh')) {
         taiRiengTatCaFileQuyTrinh();
-    } else if (tabId === 'practice' || tabId === 'exam') {
+    } else if (tabId.includes('2') || tabId.includes('3') || tabId.includes('practice') || tabId.includes('exam')) {
         questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
@@ -290,9 +290,8 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (CÓ DEBUG CONSOLE) =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH =================
 async function taiRiengTatCaFileQuyTrinh() {
-    console.log("⚙️ Đang bắt đầu tải 7 file quy trình sản xuất...");
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
                       document.getElementById('tab-6') || 
@@ -302,11 +301,7 @@ async function taiRiengTatCaFileQuyTrinh() {
         let tabs = document.querySelectorAll('.tab-content');
         workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
     }
-    
-    if (!workflowTab) {
-        console.error("❌ Không tìm thấy tab Quy Trình trong HTML!");
-        return;
-    }
+    if (!workflowTab) return;
 
     workflowTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải dữ liệu 7 quy trình sản xuất...</div>`;
 
@@ -323,12 +318,9 @@ async function taiRiengTatCaFileQuyTrinh() {
 
         for (let key in filesMap) {
             try {
-                let url = `./${filesMap[key]}`;
-                console.log(`📥 Đang fetch: ${url}`);
-                let res = await fetch(url);
+                let res = await fetch(`./${filesMap[key]}`);
                 if (res.ok) {
                     let data = await res.json();
-                    console.log(`✅ Tải thành công ${filesMap[key]}, số phần tử:`, data.length);
                     if (Array.isArray(data) && data.length > 1) {
                         let danhSachbuoc = data.slice(1).map((item, idx) => {
                             let values = Object.values(item);
@@ -342,14 +334,9 @@ async function taiRiengTatCaFileQuyTrinh() {
                         }).filter(item => item.tuVungJP);
 
                         duLieuQuyTrinhKho[key] = danhSachbuoc;
-                        console.log(`✨ Đã xử lý xong ${key}:`, danhSachbuoc.length, "bước");
                     }
-                } else {
-                    console.warn(`⚠️ Không thể tải file ${filesMap[key]} (HTTP status: ${res.status})`);
                 }
-            } catch(e) {
-                console.error(`❌ Lỗi khi đọc file ${filesMap[key]}:`, e);
-            }
+            } catch(e) {}
         }
     }
 
@@ -368,7 +355,6 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     if (!workflowTab) return;
 
     let danhSachHienTai = duLieuQuyTrinhKho[loaiHienTai] || [];
-    console.log(`🖥️ Đang hiển thị giao diện quy trình [${loaiHienTai}], tổng số bước:`, danhSachHienTai.length);
 
     let menuNutBam = [
         { id: 'precut', name: '🏠 Nhà Gỗ Pre-cut' },
@@ -406,7 +392,7 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     `;
 
     if (danhSachHienTai.length === 0) {
-        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Không có dữ liệu hoặc file JSON đang trống / lỗi đường dẫn. Hãy kiểm tra F12 Console.</div>`;
+        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Đang tải dữ liệu quy trình...</div>`;
     } else {
         danhSachHienTai.forEach((item, index) => {
             let embedUrl = convertDriveEmbedLink(item.hinhAnh);
