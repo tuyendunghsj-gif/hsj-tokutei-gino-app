@@ -176,7 +176,7 @@ async function taiRiengFileAnToan() {
     }
 }
 
-// Hàm chuẩn hóa link Google Drive sang định dạng nhúng xem trước (Preview/Embed URL)
+// Hàm chuẩn hóa link Google Drive sang định dạng nhúng xem trước
 function convertDriveEmbedLink(url) {
     if (!url) return "";
     let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
@@ -186,7 +186,17 @@ function convertDriveEmbedLink(url) {
     return url;
 }
 
-// Hiển thị Tab 5: An Toàn Vệ Sinh & Nhận Dạng Hình Ảnh (Có dùng iframe nhúng Google Drive)
+// Hàm lấy link gốc để mở tab mới nếu iframe bị chặn
+function convertDriveDirectLink(url) {
+    if (!url) return "#";
+    let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/view?usp=sharing`;
+    }
+    return url;
+}
+
+// Hiển thị Tab 5: An Toàn Vệ Sinh & Nhận Dạng Hình Ảnh
 function hienThiNhanDangAnToan(danhSach) {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -218,6 +228,7 @@ function hienThiNhanDangAnToan(danhSach) {
         
         let rawImgUrl = item.HinhAnhURL || item.LinkAnh || item.Image || "";
         let embedUrl = convertDriveEmbedLink(rawImgUrl);
+        let directUrl = convertDriveDirectLink(rawImgUrl);
 
         let luachonList = [
             { text: item.LuaChon_A },
@@ -236,8 +247,13 @@ function hienThiNhanDangAnToan(danhSach) {
                 </div>
 
                 ${embedUrl ? `
-                    <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner flex justify-center">
+                    <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner space-y-2">
                         <iframe src="${embedUrl}" class="w-full h-[320px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
+                        <div class="text-center pb-1">
+                            <a href="${directUrl}" target="_blank" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 font-semibold transition">
+                                <span>🔗 Mở hình ảnh lớn trên Google Drive</span>
+                            </a>
+                        </div>
                     </div>
                 ` : ''}
 
@@ -282,7 +298,7 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (KHỚP 100% CẤU TRÚC JSON MỚI) =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (TƯƠNG THÍCH TUYỆT ĐỐI 7 FILE JSON) =================
 async function taiRiengTatCaFileQuyTrinh() {
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
@@ -311,19 +327,23 @@ async function taiRiengTatCaFileQuyTrinh() {
                 let res = await fetch(`./${filesMap[key]}`);
                 if (res.ok) {
                     let data = await res.json();
-                    if (Array.isArray(data) && data.length > 1) {
-                        // Lọc bỏ phần tử tiêu đề đầu tiên, lấy từ phần tử thứ 2 trở đi
-                        let danhSachbuoc = data.slice(1).map(item => {
-                            let keys = Object.keys(item);
+                    if (Array.isArray(data) && data.length > 0) {
+                        // Lọc thông minh: Lấy tất cả các phần tử có chứa dữ liệu tiếng Nhật (__1 hoặc TuVungJP)
+                        let danhSachbuoc = data.filter(item => item.__1 || item.TuVungJP || item.__2).map((item, idx) => {
                             return {
-                                stt: item[keys[0]] || "",
-                                hinhAnh: item[""] || "",
-                                tuVungJP: item["__1"] || "",
-                                nghiaVN: item["__2"] || "",
-                                giaiThich: item["__3"] || ""
+                                stt: item["BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)"] || 
+                                     item["STT"] || 
+                                     item[Object.keys(item)[0]] || 
+                                     (idx + 1),
+                                hinhAnh: item[""] || item.HinhAnhURL || item.LinkAnh || "",
+                                tuVungJP: item["__1"] || item.TuVungJP || "",
+                                nghiaVN: item["__2"] || item.NghiaVN || "",
+                                giaiThich: item["__3"] || item.GiaiThich || ""
                             };
                         });
-                        duLieuQuyTrinhKho[key] = danhSachbuoc;
+                        if (danhSachbuoc.length > 0) {
+                            duLieuQuyTrinhKho[key] = danhSachbuoc;
+                        }
                     }
                 }
             } catch(e) {}
@@ -388,6 +408,7 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     } else {
         danhSachHienTai.forEach((item, index) => {
             let embedUrl = convertDriveEmbedLink(item.hinhAnh);
+            let directUrl = convertDriveDirectLink(item.hinhAnh);
 
             htmlNoiDung += `
                 <div class="p-5 bg-gradient-to-r from-blue-50/20 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
@@ -395,10 +416,14 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
                         <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-bold">Bước #${item.stt || (index + 1)}</span>
                     </div>
 
-                    <!-- Hiển thị hình ảnh quy trình qua iframe Google Drive -->
                     ${embedUrl ? `
-                        <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner flex justify-center">
+                        <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner space-y-2">
                             <iframe src="${embedUrl}" class="w-full h-[280px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
+                            <div class="text-center pb-1">
+                                <a href="${directUrl}" target="_blank" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 font-semibold transition">
+                                    <span>🔗 Mở ảnh quy trình lớn trên Google Drive</span>
+                                </a>
+                            </div>
                         </div>
                     ` : ''}
 
