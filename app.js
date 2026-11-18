@@ -1,4 +1,4 @@
-// ================= HỆ THỐNG KẾT NỐI TOÀN DIỆN - HSJ WOOD APP =================
+// ================= HỆ THỐNG KẾT NỐI CHUẨN XÁC TỪNG CHUYÊN ĐỀ - HSJ WOOD APP =================
 const danhSachFileJson = [
     "CauHoi_1860.json",
     "TuVung.json",
@@ -32,11 +32,10 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab giao diện (Hỗ trợ quét tìm khung hiển thị linh hoạt nhất)
+// Điều hướng Tab giao diện chuẩn xác
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     
-    // Tự động tìm khung tab theo mọi khả năng ID có thể có trong HTML
     let activeTab = document.getElementById('tab-' + tabId) || 
                     document.getElementById('tab-tinh-toan') || 
                     document.getElementById('tab-calculation') || 
@@ -63,12 +62,8 @@ function switchTab(tabId) {
             taiRiengFileVocab();
         }
     } else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4') {
-        let danhSachTinhToan = tatCaDuLieuKho.filter(item => item.ChuDe || item.CongThuc || (item.DeBaigoc && item.CacBướcGiai));
-        if (danhSachTinhToan.length === 0) {
-            taiRiengFileTinhToan();
-        } else {
-            hienThiBaiTapTinhToan(danhSachTinhToan);
-        }
+        // Chỉ lấy đúng dữ liệu từ file BaiTapTinhToan (có chứa CongThuc hoặc ChuDe tính toán)
+        taiRiengFileTinhToan();
     } else if (tabId === 'practice' || tabId === 'exam') {
         questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.CongThuc);
         if (questions.length === 0) questions = tatCaDuLieuKho;
@@ -109,12 +104,6 @@ async function taiTatCaDuLieu() {
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
-        
-        // Tự động kiểm tra nếu đang ở tab tính toán thì render luôn
-        let danhSachTinhToan = tatCaDuLieuKho.filter(item => item.ChuDe || item.CongThuc || (item.DeBaigoc && item.CacBướcGiai));
-        if (danhSachTinhToan.length > 0) {
-            hienThiBaiTapTinhToan(danhSachTinhToan);
-        }
     }
 }
 
@@ -128,6 +117,7 @@ async function taiRiengFileVocab() {
     } catch (e) { console.log("Lỗi tải Vocab"); }
 }
 
+// Hàm tải chuyên biệt file BaiTapTinhToan.json để không bị lẫn lộn
 async function taiRiengFileTinhToan() {
     try {
         let res = await fetch('./BaiTapTinhToan.json');
@@ -138,7 +128,11 @@ async function taiRiengFileTinhToan() {
                 hienThiBaiTapTinhToan(danhSach);
             }
         }
-    } catch (e) { console.log("Lỗi tải BaiTapTinhToan.json"); }
+    } catch (e) { 
+        console.log("Lỗi tải BaiTapTinhToan.json"); 
+        let calcTab = document.getElementById('tab-calc') || document.getElementById('calc');
+        if(calcTab) calcTab.innerHTML = `<div class="p-4 bg-red-50 text-red-700 rounded-xl">Không tìm thấy file BaiTapTinhToan.json trên GitHub. Chị kiểm tra lại tên file nhé!</div>`;
+    }
 }
 
 // Hàm tách Kanji và Hiragana thông minh cho từ vựng
@@ -216,7 +210,7 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// Hiển thị danh sách Bài Tập Tính Toán Thực Chiến (Tự động tìm khung hiển thị linh hoạt)
+// Hiển thị chuẩn xác danh sách Bài Tập Tính Toán
 function hienThiBaiTapTinhToan(danhSach) {
     let calcTab = document.getElementById('tab-calc') || 
                   document.getElementById('tab-tinh-toan') || 
@@ -237,10 +231,10 @@ function hienThiBaiTapTinhToan(danhSach) {
     danhSach.forEach((item, index) => {
         let chude = item.ChuDe || "Bài tập tính toán";
         let tieude = item.TieuDeBai || `Bài ${index + 1}`;
-        let debaigoc = item.DeBaigoc || item.question || "";
+        let debaigoc = item.DeBaigoc || "";
         let congthuc = item.CongThuc || "";
-        let buocgiai = item.CacBướcGiai || item.GiaiThich || "";
-        let dapan = item.DapAnDung || item.answer || "";
+        let buocgiai = item.CacBướcGiai || "";
+        let dapan = item.DapAnDung || "";
 
         htmlNoiDung += `
             <div class="p-5 bg-gradient-to-r from-blue-50/40 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
