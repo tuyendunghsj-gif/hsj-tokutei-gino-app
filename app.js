@@ -40,7 +40,7 @@ function enterApp() {
     }
 }
 
-// Hàm chuyển tab thông minh: Tự động xử lý mọi định dạng ID từ HTML
+// Hàm chuyển tab: Hỗ trợ chính xác ID 'process' của Tab 6
 function switchTab(rawTabId) {
     let tabId = String(rawTabId || '').toLowerCase().replace('tab-', '');
     console.log("📌 Đang chuyển sang tab:", tabId);
@@ -78,6 +78,7 @@ function switchTab(rawTabId) {
         event.currentTarget.classList.add('bg-blue-50', 'text-blue-800', 'font-bold');
     }
 
+    // Xử lý logic tải dữ liệu tương ứng cho từng tab
     if (tabId.includes('1') || tabId.includes('vocab')) {
         let danhSachTuVung = tatCaDuLieuKho.filter(item => item.TuVungJP || item.ID_TuVung);
         if (danhSachTuVung.length > 0) hienThiDanhSachTuVung(danhSachTuVung);
@@ -86,7 +87,7 @@ function switchTab(rawTabId) {
         taiRiengFileTinhToan();
     } else if (tabId.includes('5') || tabId.includes('safety') || tabId.includes('an-toan')) {
         taiRiengFileAnToan();
-    } else if (tabId.includes('6') || tabId.includes('workflow') || tabId.includes('quy') || tabId.includes('trinh')) {
+    } else if (tabId.includes('6') || tabId.includes('process') || tabId.includes('workflow') || tabId.includes('quy') || tabId.includes('trinh')) {
         taiRiengTatCaFileQuyTrinh();
     } else if (tabId.includes('2') || tabId.includes('3') || tabId.includes('practice') || tabId.includes('exam')) {
         questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
@@ -292,7 +293,9 @@ function hienThiNhanDangAnToan(danhSach) {
 
 // ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH =================
 async function taiRiengTatCaFileQuyTrinh() {
-    let workflowTab = document.getElementById('tab-workflow') || 
+    let workflowTab = document.getElementById('process') || 
+                      document.getElementById('tab-process') || 
+                      document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
                       document.getElementById('tab-6') || 
                       document.getElementById('workflow');
@@ -344,7 +347,9 @@ async function taiRiengTatCaFileQuyTrinh() {
 }
 
 function hienThiGiaoDienQuyTrinh(loaiHienTai) {
-    let workflowTab = document.getElementById('tab-workflow') || 
+    let workflowTab = document.getElementById('process') || 
+                      document.getElementById('tab-process') || 
+                      document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
                       document.getElementById('tab-6') || 
                       document.getElementById('workflow');
