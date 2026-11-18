@@ -1,8 +1,7 @@
-// ================= HỆ THỐNG KẾT NỐI CHUẨN XÁC TỪNG CHUYÊN ĐỀ - HSJ WOOD APP =================
+// ================= HỆ THỐNG KẾT NỐI CHUYÊN BIỆT TỪNG FILE - HSJ WOOD APP =================
 const danhSachFileJson = [
     "CauHoi_1860.json",
     "TuVung.json",
-    "BaiTapTinhToan.json",
     "NhanDangHinhAnh.json",
     "GhepNoi_Precut.json",
     "GhepNoi_Chip.json",
@@ -32,15 +31,21 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab giao diện chuẩn xác
+// Điều hướng Tab giao diện
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     
     let activeTab = document.getElementById('tab-' + tabId) || 
                     document.getElementById('tab-tinh-toan') || 
                     document.getElementById('tab-calculation') || 
-                    document.getElementById('calc') ||
-                    document.querySelector('.tab-content:not(.hidden)');
+                    document.getElementById('tab-4') || 
+                    document.getElementById(tabId) ||
+                    document.getElementById('calc');
+
+    if (!activeTab && (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4')) {
+        let tabs = document.querySelectorAll('.tab-content');
+        if (tabs[3]) activeTab = tabs[3];
+    }
                     
     if (activeTab) activeTab.classList.remove('hidden');
 
@@ -61,11 +66,11 @@ function switchTab(tabId) {
         } else {
             taiRiengFileVocab();
         }
-    } else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4') {
-        // Chỉ lấy đúng dữ liệu từ file BaiTapTinhToan (có chứa CongThuc hoặc ChuDe tính toán)
+    } else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4' || tabId === 'tinh_toan') {
+        // Tải chuyên biệt riêng file BaiTapTinhToan.json, không chung đụng với file khác
         taiRiengFileTinhToan();
     } else if (tabId === 'practice' || tabId === 'exam') {
-        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.CongThuc);
+        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
@@ -74,7 +79,7 @@ function switchTab(tabId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Tải toàn bộ dữ liệu 11 file JSON
+// Tải dữ liệu các file thông thường (trừ file tính toán)
 async function taiTatCaDuLieu() {
     const questionTextEl = document.getElementById('question-text');
     if (questionTextEl) questionTextEl.innerText = "⏳ Đang kết nối tới kho dữ liệu GitHub...";
@@ -100,7 +105,7 @@ async function taiTatCaDuLieu() {
 
     if (tongHop.length > 0) {
         tatCaDuLieuKho = tongHop;
-        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.CongThuc);
+        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
@@ -117,21 +122,37 @@ async function taiRiengFileVocab() {
     } catch (e) { console.log("Lỗi tải Vocab"); }
 }
 
-// Hàm tải chuyên biệt file BaiTapTinhToan.json để không bị lẫn lộn
+// Hàm tải chuyên biệt độc lập 100% file BaiTapTinhToan.json
 async function taiRiengFileTinhToan() {
+    let calcTab = document.getElementById('tab-calc') || 
+                  document.getElementById('tab-tinh-toan') || 
+                  document.getElementById('tab-tinh_toan') ||
+                  document.getElementById('tab-4') || 
+                  document.getElementById('calc');
+                  
+    if (!calcTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        if (tabs[3]) calcTab = tabs[3];
+    }
+    if (!calcTab) return;
+
+    calcTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải 21 bài tập tính toán...</div>`;
+
     try {
         let res = await fetch('./BaiTapTinhToan.json');
         if (res.ok) {
             let data = await res.json();
             let danhSach = Array.isArray(data) ? data : (data.data || Object.values(data)[0] || []);
-            if (Array.isArray(danhSach)) {
+            if (Array.isArray(danhSach) && danhSach.length > 0) {
                 hienThiBaiTapTinhToan(danhSach);
+            } else {
+                calcTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ File BaiTapTinhToan.json trống dữ liệu.</div>`;
             }
+        } else {
+            calcTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ Không tìm thấy file BaiTapTinhToan.json trên GitHub.</div>`;
         }
     } catch (e) { 
-        console.log("Lỗi tải BaiTapTinhToan.json"); 
-        let calcTab = document.getElementById('tab-calc') || document.getElementById('calc');
-        if(calcTab) calcTab.innerHTML = `<div class="p-4 bg-red-50 text-red-700 rounded-xl">Không tìm thấy file BaiTapTinhToan.json trên GitHub. Chị kiểm tra lại tên file nhé!</div>`;
+        calcTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ Lỗi kết nối file BaiTapTinhToan.json</div>`;
     }
 }
 
@@ -214,9 +235,14 @@ function hienThiDanhSachTuVung(danhSach) {
 function hienThiBaiTapTinhToan(danhSach) {
     let calcTab = document.getElementById('tab-calc') || 
                   document.getElementById('tab-tinh-toan') || 
-                  document.getElementById('calc') ||
-                  document.querySelector('.tab-content:not(.hidden)');
+                  document.getElementById('tab-tinh_toan') ||
+                  document.getElementById('tab-4') || 
+                  document.getElementById('calc');
                   
+    if (!calcTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        if (tabs[3]) calcTab = tabs[3];
+    }
     if (!calcTab) return;
 
     let htmlNoiDung = `
@@ -231,10 +257,10 @@ function hienThiBaiTapTinhToan(danhSach) {
     danhSach.forEach((item, index) => {
         let chude = item.ChuDe || "Bài tập tính toán";
         let tieude = item.TieuDeBai || `Bài ${index + 1}`;
-        let debaigoc = item.DeBaigoc || "";
+        let debaigoc = item.DeBaigoc || item.question || "";
         let congthuc = item.CongThuc || "";
-        let buocgiai = item.CacBướcGiai || "";
-        let dapan = item.DapAnDung || "";
+        let buocgiai = item.CacBướcGiai || item.GiaiThich || "";
+        let dapan = item.DapAnDung || item.answer || "";
 
         htmlNoiDung += `
             <div class="p-5 bg-gradient-to-r from-blue-50/40 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
@@ -260,7 +286,7 @@ function hienThiBaiTapTinhToan(danhSach) {
 function renderQuestion() {
     if (!questions || questions.length === 0) return;
     let q = questions[currentIndex];
-    if (q.TuVungJP || q.CongThuc) {
+    if (q.TuVungJP) {
         nextQuestion();
         return;
     }
@@ -332,3 +358,4 @@ function nextQuestion() {
 function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
+
