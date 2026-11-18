@@ -40,7 +40,7 @@ function enterApp() {
     }
 }
 
-// Hàm chuyển tab: Hỗ trợ chính xác ID 'process' của Tab 6
+// Hàm chuyển tab thông minh
 function switchTab(rawTabId) {
     let tabId = String(rawTabId || '').toLowerCase().replace('tab-', '');
     console.log("📌 Đang chuyển sang tab:", tabId);
@@ -65,7 +65,7 @@ function switchTab(rawTabId) {
                     
     if (activeTab) {
         activeTab.classList.remove('hidden');
-        console.log("✅ Đã kích hoạt hiển thị tab thành công.");
+        console.log("✅ Đã kích hoạt hiển thị tab thành công:", activeTab.id || activeTab.className);
     }
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -78,7 +78,6 @@ function switchTab(rawTabId) {
         event.currentTarget.classList.add('bg-blue-50', 'text-blue-800', 'font-bold');
     }
 
-    // Xử lý logic tải dữ liệu tương ứng cho từng tab
     if (tabId.includes('1') || tabId.includes('vocab')) {
         let danhSachTuVung = tatCaDuLieuKho.filter(item => item.TuVungJP || item.ID_TuVung);
         if (danhSachTuVung.length > 0) hienThiDanhSachTuVung(danhSachTuVung);
@@ -291,8 +290,11 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (BẢN AN TOÀN TUYỆT ĐỐI & CÓ LOG DEBUG) =================
 async function taiRiengTatCaFileQuyTrinh() {
+    console.log("⚙️ Bắt đầu tải 7 file quy trình sản xuất...");
+    
+    // Tìm chính xác phần tử hiển thị của tab 6 theo mọi ID có thể
     let workflowTab = document.getElementById('process') || 
                       document.getElementById('tab-process') || 
                       document.getElementById('tab-workflow') || 
@@ -304,10 +306,15 @@ async function taiRiengTatCaFileQuyTrinh() {
         let tabs = document.querySelectorAll('.tab-content');
         workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
     }
-    if (!workflowTab) return;
+    
+    if (!workflowTab) {
+        console.error("❌ Không tìm thấy khung chứa Tab 6 trong HTML!");
+        return;
+    }
 
-    workflowTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải dữ liệu 7 quy trình sản xuất...</div>`;
+    console.log("✅ Đã tìm thấy khung chứa Tab 6:", workflowTab);
 
+    // Nếu chưa tải dữ liệu, tiến hành fetch đồng loạt
     if (duLieuQuyTrinhKho.precut.length === 0) {
         const filesMap = {
             precut: "GhepNoi_Precut.json",
@@ -321,9 +328,12 @@ async function taiRiengTatCaFileQuyTrinh() {
 
         for (let key in filesMap) {
             try {
-                let res = await fetch(`./${filesMap[key]}`);
+                let url = `./${filesMap[key]}`;
+                console.log(`📥 Đang fetch file: ${url}`);
+                let res = await fetch(url);
                 if (res.ok) {
                     let data = await res.json();
+                    console.log(`✅ Tải thành công ${filesMap[key]}, số dòng:`, data.length);
                     if (Array.isArray(data) && data.length > 1) {
                         let danhSachbuoc = data.slice(1).map((item, idx) => {
                             let values = Object.values(item);
@@ -337,9 +347,14 @@ async function taiRiengTatCaFileQuyTrinh() {
                         }).filter(item => item.tuVungJP);
 
                         duLieuQuyTrinhKho[key] = danhSachbuoc;
+                        console.log(`✨ Đã lọc thành công ${danhSachbuoc.length} bước cho ${key}`);
                     }
+                } else {
+                    console.warn(`⚠️ Không tìm thấy file ${filesMap[key]} (Mã lỗi: ${res.status})`);
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error(`❌ Lỗi đọc file ${filesMap[key]}:`, e);
+            }
         }
     }
 
@@ -360,6 +375,7 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     if (!workflowTab) return;
 
     let danhSachHienTai = duLieuQuyTrinhKho[loaiHienTai] || [];
+    console.log(`🖥️ Đang vẽ giao diện quy trình [${loaiHienTai}], số bước hiển thị:`, danhSachHienTai.length);
 
     let menuNutBam = [
         { id: 'precut', name: '🏠 Nhà Gỗ Pre-cut' },
@@ -378,6 +394,7 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
                 <p class="text-xs text-slate-500">木材加工・製造工程 (Kotei Mondai) - Hệ thống 7 quy trình thực chiến</p>
             </div>
 
+            <!-- Thanh chọn loại quy trình -->
             <div class="flex flex-wrap gap-2 pb-2 border-b border-slate-100">
     `;
 
@@ -393,11 +410,17 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     htmlNoiDung += `
             </div>
 
+            <!-- Danh sách nội dung quy trình -->
             <div class="space-y-4 max-h-[620px] overflow-y-auto pr-2">
     `;
 
     if (danhSachHienTai.length === 0) {
-        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Đang tải dữ liệu quy trình...</div>`;
+        htmlNoiDung += `
+            <div class="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 space-y-2">
+                <p class="text-slate-600 font-semibold">⏳ Đang tải dữ liệu hoặc file JSON chưa sẵn sàng.</p>
+                <p class="text-xs text-slate-400">Hãy nhấn F12 kiểm tra bảng Console xem có file nào bị báo lỗi 404 không chị nhé!</p>
+            </div>
+        `;
     } else {
         danhSachHienTai.forEach((item, index) => {
             let embedUrl = convertDriveEmbedLink(item.hinhAnh);
