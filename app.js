@@ -31,20 +31,19 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab giao diện
+// Điều hướng Tab giao diện (Hỗ trợ mở rộng Tab An Toàn)
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     
     let activeTab = document.getElementById('tab-' + tabId) || 
-                    document.getElementById('tab-tinh-toan') || 
-                    document.getElementById('tab-calculation') || 
-                    document.getElementById('tab-4') || 
-                    document.getElementById(tabId) ||
-                    document.getElementById('calc');
+                    document.getElementById('tab-an-toan') || 
+                    document.getElementById('tab-safety') || 
+                    document.getElementById('tab-5') || 
+                    document.getElementById(tabId);
 
-    if (!activeTab && (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4')) {
+    if (!activeTab && (tabId === 'safety' || tabId === 'an-toan' || tabId === '5')) {
         let tabs = document.querySelectorAll('.tab-content');
-        if (tabs[3]) activeTab = tabs[3];
+        if (tabs[4]) activeTab = tabs[4]; // Tab số 5 (An toàn)
     }
                     
     if (activeTab) activeTab.classList.remove('hidden');
@@ -68,8 +67,10 @@ function switchTab(tabId) {
         }
     } else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4' || tabId === 'tinh_toan') {
         taiRiengFileTinhToan();
+    } else if (tabId === 'safety' || tabId === 'an-toan' || tabId === '5') {
+        taiRiengFileAnToan();
     } else if (tabId === 'practice' || tabId === 'exam') {
-        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP);
+        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
@@ -95,7 +96,7 @@ async function taiTatCaDuLieu() {
 
     if (tongHop.length > 0) {
         tatCaDuLieuKho = tongHop;
-        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP);
+        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
@@ -112,21 +113,13 @@ async function taiRiengFileVocab() {
     } catch (e) {}
 }
 
-// Tải chuyên biệt file BaiTapTinhToan.json
 async function taiRiengFileTinhToan() {
-    let calcTab = document.getElementById('tab-calc') || 
-                  document.getElementById('tab-tinh-toan') || 
-                  document.getElementById('tab-tinh_toan') ||
-                  document.getElementById('tab-4') || 
-                  document.getElementById('calc');
-                  
+    let calcTab = document.getElementById('tab-calc') || document.getElementById('tab-tinh-toan') || document.getElementById('tab-4');
     if (!calcTab) {
         let tabs = document.querySelectorAll('.tab-content');
         if (tabs[3]) calcTab = tabs[3];
     }
     if (!calcTab) return;
-
-    calcTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải bài tập tính toán...</div>`;
 
     try {
         let res = await fetch('./BaiTapTinhToan.json');
@@ -135,12 +128,39 @@ async function taiRiengFileTinhToan() {
             let danhSach = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
             if (Array.isArray(danhSach) && danhSach.length > 0) {
                 hienThiBaiTapTinhToan(danhSach);
+            }
+        }
+    } catch (e) {}
+}
+
+// Tải chuyên biệt file NhanDangHinhAnh.json cho Tab An Toàn
+async function taiRiengFileAnToan() {
+    let safetyTab = document.getElementById('tab-safety') || 
+                    document.getElementById('tab-an-toan') || 
+                    document.getElementById('tab-5') || 
+                    document.getElementById('safety');
+                  
+    if (!safetyTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        if (tabs[4]) safetyTab = tabs[4];
+    }
+    if (!safetyTab) return;
+
+    safetyTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải câu hỏi nhận dạng an toàn...</div>`;
+
+    try {
+        let res = await fetch('./NhanDangHinhAnh.json');
+        if (res.ok) {
+            let data = await res.json();
+            let danhSach = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
+            if (Array.isArray(danhSach) && danhSach.length > 0) {
+                hienThiNhanDangAnToan(danhSach);
             } else {
-                calcTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ File BaiTapTinhToan.json trống dữ liệu.</div>`;
+                safetyTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ File NhanDangHinhAnh.json trống dữ liệu.</div>`;
             }
         }
     } catch (e) { 
-        calcTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ Lỗi tải file BaiTapTinhToan.json</div>`;
+        safetyTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ Lỗi tải file NhanDangHinhAnh.json</div>`;
     }
 }
 
@@ -208,14 +228,8 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// Hiển thị Bài Tập Tính Toán (Ẩn hoàn toàn đáp án, có nút bấm hiện ra)
 function hienThiBaiTapTinhToan(danhSach) {
-    let calcTab = document.getElementById('tab-calc') || 
-                  document.getElementById('tab-tinh-toan') || 
-                  document.getElementById('tab-tinh_toan') ||
-                  document.getElementById('tab-4') || 
-                  document.getElementById('calc');
-                  
+    let calcTab = document.getElementById('tab-calc') || document.getElementById('tab-tinh-toan') || document.getElementById('tab-4');
     if (!calcTab) {
         let tabs = document.querySelectorAll('.tab-content');
         if (tabs[3]) calcTab = tabs[3];
@@ -228,7 +242,7 @@ function hienThiBaiTapTinhToan(danhSach) {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="border-b pb-3">
                 <h2 class="text-lg font-bold text-blue-900">🧮 Bài Tập Tính Toán Thực Chiến Ngành Gỗ</h2>
-                <p class="text-xs text-slate-500">計算問題 (Keisan Mondai) - Tổng số: ${danhSachBaiTap.length} bài tập (Đáp án đã được ẩn để luyện tập)</p>
+                <p class="text-xs text-slate-500">計算問題 (Keisan Mondai) - Tổng số: ${danhSachBaiTap.length} bài tập (Đáp án đã ẩn)</p>
             </div>
             <div class="space-y-4 max-h-[650px] overflow-y-auto pr-2">
     `;
@@ -250,13 +264,9 @@ function hienThiBaiTapTinhToan(danhSach) {
                 <div class="text-slate-900 font-semibold text-base whitespace-pre-line bg-white p-3 rounded-lg border border-slate-100">
                     📝 ${debaigoc}
                 </div>
-                
-                <!-- Nút bấm xem đáp án -->
                 <button onclick="toggleAnswer(${index})" id="btn-${index}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
                     <span>👁️ Xem đáp án & Hướng dẫn giải</span>
                 </button>
-
-                <!-- Phần nội dung ẩn (Mặc định dùng style="display:none" ẩn hoàn toàn) -->
                 <div id="ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
                     ${congthuc ? `<div class="p-3 bg-blue-50 text-blue-900 rounded-lg text-sm border border-blue-100"><strong>📐 Công thức:</strong> ${congthuc}</div>` : ''}
                     ${buocgiai ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Các bước giải:</strong><br>${buocgiai}</div>` : ''}
@@ -270,7 +280,6 @@ function hienThiBaiTapTinhToan(danhSach) {
     calcTab.innerHTML = htmlNoiDung;
 }
 
-// Hàm bật/tắt hiển thị đáp án bằng JavaScript
 function toggleAnswer(index) {
     let box = document.getElementById(`ans-${index}`);
     let btn = document.getElementById(`btn-${index}`);
@@ -287,10 +296,114 @@ function toggleAnswer(index) {
     }
 }
 
+// Hiển thị chuyên biệt Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động
+function hienThiNhanDangAnToan(danhSach) {
+    let safetyTab = document.getElementById('tab-safety') || 
+                    document.getElementById('tab-an-toan') || 
+                    document.getElementById('tab-5') || 
+                    document.getElementById('safety');
+                  
+    if (!safetyTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        if (tabs[4]) safetyTab = tabs[4];
+    }
+    if (!safetyTab) return;
+
+    let htmlNoiDung = `
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="border-b pb-3">
+                <h2 class="text-lg font-bold text-blue-900">🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Hình Ảnh Nguy Cơ</h2>
+                <p class="text-xs text-slate-500">安全衛生・画像認識問題 - Tổng số: ${danhSach.length} câu hỏi</p>
+            </div>
+            <div class="space-y-6 max-h-[700px] overflow-y-auto pr-2">
+    `;
+
+    danhSach.forEach((item, index) => {
+        let chude = item.ChuDe || "Thực kỹ / An toàn vệ sinh";
+        let tieude = item.TieuDeCau || `Câu ${index + 1}`;
+        let deJP = item.DeBaigocJP || "";
+        let deVN = item.DeBaigocVN || "";
+        let giaithich = item.GiaiThich || "";
+        let dapan = item.DapAnDung || "";
+
+        // Thu thập các lựa chọn A, I, U, E, O, Ka nếu có
+        let luachonList = [
+            item.LuaChon_A, item.LuaChon_I, item.LuaChon_U, 
+            item.LuaChon_E, item.LuaChon_O, item.LuaChon_Ka
+        ].filter(Boolean);
+
+        htmlNoiDung += `
+            <div class="p-5 bg-gradient-to-r from-blue-50/30 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold">${chude}</span>
+                    <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
+                </div>
+
+                <!-- Nội dung đề bài Nhật & Việt -->
+                <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100">
+                    <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${deJP}</div>
+                    <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>
+                </div>
+
+                <!-- Danh sách các đáp án lựa chọn -->
+                <div class="space-y-2">
+                    <p class="text-xs font-bold text-slate-500 uppercase">Các lựa chọn phương án:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        `;
+
+        luachonList.forEach(opt => {
+            htmlNoiDung += `
+                <div class="p-3 bg-white border border-slate-200 hover:border-blue-300 rounded-lg text-sm text-slate-800 font-medium shadow-2xs">
+                    ${opt}
+                </div>
+            `;
+        });
+
+        htmlNoiDung += `
+                    </div>
+                </div>
+
+                <!-- Nút bấm xem giải thích & đáp án -->
+                <button onclick="toggleSafetyAnswer(${index})" id="btn-safe-${index}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
+                    <span>👁️ Xem đáp án & Giải thích</span>
+                </button>
+
+                <!-- Khung đáp án ẩn -->
+                <div id="safe-ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
+                    <div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">
+                        ✅ Đáp án đúng: ${dapan}
+                    </div>
+                    ${giaithich ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Giải thích chi tiết:</strong><br>${giaithich}</div>` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    htmlNoiDung += `</div></div>`;
+    safetyTab.innerHTML = htmlNoiDung;
+}
+
+// Hàm bật/tắt hiển thị đáp án phần An Toàn
+function toggleSafetyAnswer(index) {
+    let box = document.getElementById(`safe-ans-${index}`);
+    let btn = document.getElementById(`btn-safe-${index}`);
+    if (box && btn) {
+        if (box.style.display === 'none') {
+            box.style.display = 'block';
+            btn.innerHTML = `<span>🙈 Thu gọn đáp án</span>`;
+            btn.className = "px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
+        } else {
+            box.style.display = 'none';
+            btn.innerHTML = `<span>👁️ Xem đáp án & Giải thích</span>`;
+            btn.className = "px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
+        }
+    }
+}
+
 function renderQuestion() {
     if (!questions || questions.length === 0) return;
     let q = questions[currentIndex];
-    if (q.TuVungJP) { nextQuestion(); return; }
+    if (q.TuVungJP || q.ID_HinhAnh) { nextQuestion(); return; }
     
     let progressEl = document.getElementById('quiz-progress');
     if (progressEl) progressEl.innerText = `[${q.TrangSo || 'Ôn tập'}] - Câu ${currentIndex + 1} / ${questions.length}`;
@@ -359,7 +472,5 @@ function nextQuestion() {
 function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
-    
 
-
-
+ 
