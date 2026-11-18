@@ -208,7 +208,7 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// Hiển thị Bài Tập Tính Toán (Đáp án mặc định ẩn tuyệt đối bằng CSS)
+// Hiển thị Bài Tập Tính Toán (Ẩn hoàn toàn đáp án, có nút bấm hiện ra)
 function hienThiBaiTapTinhToan(danhSach) {
     let calcTab = document.getElementById('tab-calc') || 
                   document.getElementById('tab-tinh-toan') || 
@@ -251,13 +251,13 @@ function hienThiBaiTapTinhToan(danhSach) {
                     📝 ${debaigoc}
                 </div>
                 
-                <!-- Nút bấm ẩn/hiện đáp án -->
-                <button onclick="toggleAnswer(${index})" id="btn-answer-${index}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
+                <!-- Nút bấm xem đáp án -->
+                <button onclick="toggleAnswer(${index})" id="btn-${index}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
                     <span>👁️ Xem đáp án & Hướng dẫn giải</span>
                 </button>
 
-                <!-- Khung chứa đáp án (Dùng style="display: none;" để ẩn tuyệt đối) -->
-                <div id="answer-box-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
+                <!-- Phần nội dung ẩn (Mặc định dùng style="display:none" ẩn hoàn toàn) -->
+                <div id="ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
                     ${congthuc ? `<div class="p-3 bg-blue-50 text-blue-900 rounded-lg text-sm border border-blue-100"><strong>📐 Công thức:</strong> ${congthuc}</div>` : ''}
                     ${buocgiai ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Các bước giải:</strong><br>${buocgiai}</div>` : ''}
                     ${dapan ? `<div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">✅ Đáp án: ${dapan}</div>` : ''}
@@ -270,10 +270,10 @@ function hienThiBaiTapTinhToan(danhSach) {
     calcTab.innerHTML = htmlNoiDung;
 }
 
-// Hàm xử lý bật/tắt hiển thị đáp án bằng JavaScript trực tiếp
+// Hàm bật/tắt hiển thị đáp án bằng JavaScript
 function toggleAnswer(index) {
-    let box = document.getElementById(`answer-box-${index}`);
-    let btn = document.getElementById(`btn-answer-${index}`);
+    let box = document.getElementById(`ans-${index}`);
+    let btn = document.getElementById(`btn-${index}`);
     if (box && btn) {
         if (box.style.display === 'none') {
             box.style.display = 'block';
@@ -359,6 +359,7 @@ function nextQuestion() {
 function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
+    
 
 
 
