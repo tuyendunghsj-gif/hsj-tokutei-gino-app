@@ -112,23 +112,35 @@ async function taiRiengFileVocab() {
     }
 }
 
-// Hàm tách Kanji và Hiragana dính liền để hiển thị sạch sẽ & đọc đúng 1 lần
+// 1. HÀM TÁCH KANJI VÀ HIRAGANA THÔNG MINH
 function parseTuVungJP(jpText) {
     if (!jpText) return { display: "", speech: "" };
-    let match = jpText.match(/^([\u4E00-\u9FAf\u3400-\u4DBF\u3005]+)([\u3040-\u309F]+)$/);
-    if (match) {
+    
+    let hiraganaIndex = -1;
+    for (let i = 0; i < jpText.length; i++) {
+        let code = jpText.charCodeAt(i);
+        if (code >= 0x3040 && code <= 0x309F) {
+            hiraganaIndex = i;
+            break;
+        }
+    }
+    
+    if (hiraganaIndex > 0) {
+        let kanjiPart = jpText.substring(0, hiraganaIndex);
+        let hiraganaPart = jpText.substring(hiraganaIndex);
         return {
-            display: `${match[1]} <span class="text-slate-500 font-normal text-sm">(${match[2]})</span>`,
-            speech: match[1]
+            display: `${kanjiPart} <span class="text-slate-500 font-normal text-sm">(${hiraganaPart})</span>`,
+            speech: kanjiPart // Loa chỉ đọc phần từ chính để tránh lặp
         };
     }
+    
     return {
         display: jpText,
         speech: jpText
     };
 }
 
-// Hàm phát âm thanh tiếng Nhật (Text-to-Speech)
+// 2. HÀM PHÁT ÂM THANH TIẾNG NHẬT (TEXT-TO-SPEECH)
 function phatAmThanh(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -141,7 +153,7 @@ function phatAmThanh(text) {
     }
 }
 
-// Hiển thị danh sách Từ Vựng
+// 3. HIỂN THỊ DANH SÁCH TỪ VỰNG KÈM NÚT LOA
 function hienThiDanhSachTuVung(danhSach) {
     const vocabTab = document.getElementById('tab-vocab');
     if (!vocabTab) return;
@@ -150,7 +162,7 @@ function hienThiDanhSachTuVung(danhSach) {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <div>
-                    <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ (Chuẩn Âm Thanh)</h2>
+                    <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ (Tách Chữ & Âm Thanh Chuẩn)</h2>
                     <p class="text-xs text-slate-500">専門用語 (Senmon Yougo) - Tổng số: ${danhSach.length} từ</p>
                 </div>
             </div>
@@ -194,7 +206,7 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// Hiển thị nội dung câu hỏi trắc nghiệm
+// 4. HIỂN THỊ CÂU HỎI TRẮC NGHIỆM
 function renderQuestion() {
     if (!questions || questions.length === 0) return;
     
@@ -253,7 +265,7 @@ function renderQuestion() {
     }
 }
 
-// Kiểm tra đáp án đúng/sai
+// 5. KIỂM TRA ĐÁP ÁN
 function checkAnswer(button, selectedOption, correctAnswer, explanation) {
     let optsContainer = document.getElementById('options-container');
     if (!optsContainer) return;
@@ -281,7 +293,7 @@ function checkAnswer(button, selectedOption, correctAnswer, explanation) {
     }
 }
 
-// Chuyển câu tiếp theo
+// 6. CHUYỂN CÂU HỎI TIẾP THEO
 function nextQuestion() {
     if (currentIndex < questions.length - 1) {
         currentIndex++;
@@ -291,7 +303,7 @@ function nextQuestion() {
     }
 }
 
-// Quay lại câu trước
+// 7. QUAY LẠI CÂU TRƯỚC
 function prevQuestion() {
     if (currentIndex > 0) {
         currentIndex--;
