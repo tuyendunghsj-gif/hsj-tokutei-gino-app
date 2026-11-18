@@ -1,4 +1,4 @@
-// ================= HỆ THỐNG KẾT NỐI CHUYÊN BIỆT TỪNG FILE - HSJ WOOD APP =================
+// ================= HỆ THỐNG KẾT NỐI TOÀN DIỆN - HSJ WOOD APP =================
 const danhSachFileJson = [
     "CauHoi_1860.json",
     "TuVung.json",
@@ -112,7 +112,7 @@ async function taiRiengFileVocab() {
     } catch (e) {}
 }
 
-// Hàm tải chuyên biệt file BaiTapTinhToan.json chuẩn xác cấu trúc
+// Tải chuyên biệt file BaiTapTinhToan.json
 async function taiRiengFileTinhToan() {
     let calcTab = document.getElementById('tab-calc') || 
                   document.getElementById('tab-tinh-toan') || 
@@ -208,7 +208,7 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// Hiển thị chuẩn xác Bài Tập Tính Toán (Bóc tách đúng theo cấu trúc file JSON thực tế)
+// Hiển thị chuẩn xác Bài Tập Tính Toán (Khớp tuyệt đối với cấu trúc file JSON có các trường __2, __3, __4, __5)
 function hienThiBaiTapTinhToan(danhSach) {
     let calcTab = document.getElementById('tab-calc') || 
                   document.getElementById('tab-tinh-toan') || 
@@ -222,7 +222,7 @@ function hienThiBaiTapTinhToan(danhSach) {
     }
     if (!calcTab) return;
 
-    // Lọc bỏ dòng tiêu đề đầu tiên trong file JSON (nếu có)
+    // Lọc lấy các bài tập có chứa nội dung đề bài (trường __2 hoặc DeBaigoc)
     let danhSachBaiTap = danhSach.filter(item => item.__2 || item.DeBaigoc || item.question);
 
     let htmlNoiDung = `
@@ -235,7 +235,7 @@ function hienThiBaiTapTinhToan(danhSach) {
     `;
 
     danhSachBaiTap.forEach((item, index) => {
-        let chude = item[""] || item.ChuDe || "Bài tập tính toán";
+        let chude = item[""] || item.ChuDe || "木材の材積と歩止まり計算";
         let tieude = item.__1 || item.TieuDeBai || `Bài ${index + 1}`;
         let debaigoc = item.__2 || item.DeBaigoc || item.question || "";
         let congthuc = item.__3 || item.CongThuc || "";
@@ -334,7 +334,3 @@ function nextQuestion() {
 function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
-
-
-
- 
