@@ -298,7 +298,7 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (TRÍCH XUẤT THEO VỊ TRÍ CỘT 0, 1, 2, 3, 4) =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (TỰ ĐỘNG BỎ QUA DÒNG TIÊU ĐỀ ĐẦU TIÊN) =================
 async function taiRiengTatCaFileQuyTrinh() {
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
@@ -327,10 +327,11 @@ async function taiRiengTatCaFileQuyTrinh() {
                 let res = await fetch(`./${filesMap[key]}`);
                 if (res.ok) {
                     let data = await res.json();
-                    if (Array.isArray(data) && data.length > 1) {
-                        // Bỏ qua dòng tiêu đề đầu tiên (index 0), lấy từ index 1 trở đi
+                    if (Array.isArray(data) && data.length > 0) {
+                        // Tự động bỏ qua phần tử đầu tiên (dòng tiêu đề), lấy từ phần tử thứ 2 trở đi
                         let danhSachbuoc = data.slice(1).map((item, idx) => {
                             let values = Object.values(item);
+                            // Lấy STT, Link ảnh, Từ vựng JP, Nghĩa VN, Giải thích theo đúng thứ tự các cột
                             return {
                                 stt: values[0] || (idx + 1),
                                 hinhAnh: values[1] || "",
@@ -671,6 +672,3 @@ function nextQuestion() {
 function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
-
-   
- 
