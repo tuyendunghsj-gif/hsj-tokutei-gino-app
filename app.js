@@ -158,9 +158,9 @@ function hienThiDanhSachTuVung(danhSach) {
                     <div class="flex justify-between items-start">
                         <div class="flex items-center space-x-2">
                             <span class="text-base font-bold text-blue-900">${jp}</span>
-                            <!-- Nút Loa phát âm thanh -->
-                            <button onclick="phatAmThanh('${jpClean}')" class="p-1.5 bg-blue-100 hover:bg-orange-500 text-blue-800 hover:text-white rounded-full transition shadow-sm cursor-pointer" title="Nghe phát âm">
-                                🔊
+                           <!-- Nút Loa phát âm thanh -->
+<button onclick="phatAmThanh('${jpClean}')" class="p-1.5 bg-blue-100 hover:bg-orange-500 text-blue-800 hover:text-white rounded-full transition shadow-sm cursor-pointer" title="Nghe phát âm">
+    🔊
                             </button>
                         </div>
                         <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">${trang}</span>
