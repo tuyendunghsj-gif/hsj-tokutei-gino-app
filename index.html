@@ -15,7 +15,7 @@
         
         <!-- Khung tròn chứa Video conga.mp4 -->
         <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white/85 shadow-2xl mb-6 bg-slate-900 flex items-center justify-center relative">
-            <video autoplay muted loop playsinline webkit-playsinline preload="auto" class="w-full h-full object-cover absolute inset-0 pointer-events-none">
+            <video id="intro-video" autoplay muted loop playsinline webkit-playsinline preload="auto" class="w-full h-full object-cover absolute inset-0 pointer-events-none">
                 <source src="conga.mp4" type="video/mp4">
                 Trình duyệt của bạn không hỗ trợ video.
             </video>
@@ -206,5 +206,16 @@
     </footer>
 
     <script src="app.js"></script>
+    <script>
+        // Đoạn script tự động ép video conga.mp4 phát ngay khi trang tải xong
+        document.addEventListener("DOMContentLoaded", function() {
+            const vid = document.getElementById("intro-video");
+            if (vid) {
+                vid.play().catch(error => {
+                    console.log("Trình duyệt yêu cầu tương tác, đang thử phát lại...", error);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
