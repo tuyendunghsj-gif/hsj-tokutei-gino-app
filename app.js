@@ -33,6 +33,7 @@ let userSequenceState = [];
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("🚀 Đang khởi động hệ thống nạp dữ liệu HSJ Wood...");
     await taiTatCaDuLieu();
+    await taiRiengTatCaFileQuyTrinh();
 });
 
 function enterApp() {
@@ -53,7 +54,8 @@ function switchTab(rawTabId) {
                     document.getElementById(tabId) || 
                     document.getElementById('tab-quy-trinh') || 
                     document.getElementById('tab-workflow') || 
-                    document.getElementById('tab-6');
+                    document.getElementById('tab-6') ||
+                    document.getElementById('process');
 
     if (!activeTab) {
         let tabs = document.querySelectorAll('.tab-content');
@@ -88,7 +90,7 @@ function switchTab(rawTabId) {
     } else if (tabId.includes('5') || tabId.includes('safety') || tabId.includes('an-toan')) {
         taiRiengFileAnToan();
     } else if (tabId.includes('6') || tabId.includes('process') || tabId.includes('workflow') || tabId.includes('quy') || tabId.includes('trinh')) {
-        taiRiengTatCaFileQuyTrinh();
+        hienThiGiaoDienQuyTrinh('precut');
     } else if (tabId.includes('2') || tabId.includes('3') || tabId.includes('practice') || tabId.includes('exam')) {
         questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
         if (questions.length === 0) questions = tatCaDuLieuKho;
@@ -291,8 +293,47 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (TÍCH HỢP MINI-GAME SẮP XẾP ĐÚNG THỨ TỰ) =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH & MINI-GAME SẮP XẾP =================
 async function taiRiengTatCaFileQuyTrinh() {
+    if (duLieuQuyTrinhKho.precut.length > 0) return;
+
+    const filesMap = {
+        precut: "GhepNoi_Precut.json",
+        seizai: "GhepNoi_Seizai.json",
+        shuuseizai: "GhepNoi_Shuuseizai.json",
+        goubanLVL: "GhepNoi_GoubanLVL.json",
+        flooring: "GhepNoi_Flooring.json",
+        tsukita: "GhepNoi_Tsukita.json",
+        chip: "GhepNoi_Chip.json"
+    };
+
+    for (let key in filesMap) {
+        try {
+            let res = await fetch(`./${filesMap[key]}`);
+            if (res.ok) {
+                let data = await res.json();
+                if (Array.isArray(data) && data.length > 1) {
+                    let danhSachbuoc = data.slice(1).map((item, idx) => {
+                        let values = Object.values(item);
+                        return {
+                            stt: Number(values[0]) || (idx + 1),
+                            hinhAnh: values[1] || "",
+                            tuVungJP: values[2] || "",
+                            nghiaVN: values[3] || "",
+                            giaiThich: values[4] || ""
+                        };
+                    }).filter(item => item.tuVungJP);
+
+                    duLieuQuyTrinhKho[key] = danhSachbuoc;
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+async function hienThiGiaoDienQuyTrinh(loaiHienTai) {
+    await taiRiengTatCaFileQuyTrinh();
+
     let workflowTab = document.getElementById('process') || 
                       document.getElementById('tab-process') || 
                       document.getElementById('tab-workflow') || 
@@ -306,65 +347,11 @@ async function taiRiengTatCaFileQuyTrinh() {
     }
     if (!workflowTab) return;
 
-    workflowTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải dữ liệu quy trình sản xuất...</div>`;
-
-    if (duLieuQuyTrinhKho.precut.length === 0) {
-        const filesMap = {
-            precut: "GhepNoi_Precut.json",
-            seizai: "GhepNoi_Seizai.json",
-            shuuseizai: "GhepNoi_Shuuseizai.json",
-            goubanLVL: "GhepNoi_GoubanLVL.json",
-            flooring: "GhepNoi_Flooring.json",
-            tsukita: "GhepNoi_Tsukita.json",
-            chip: "GhepNoi_Chip.json"
-        };
-
-        for (let key in filesMap) {
-            try {
-                let res = await fetch(`./${filesMap[key]}`);
-                if (res.ok) {
-                    let data = await res.json();
-                    if (Array.isArray(data) && data.length > 1) {
-                        let danhSachbuoc = data.slice(1).map((item, idx) => {
-                            let values = Object.values(item);
-                            return {
-                                stt: Number(values[0]) || (idx + 1),
-                                hinhAnh: values[1] || "",
-                                tuVungJP: values[2] || "",
-                                nghiaVN: values[3] || "",
-                                giaiThich: values[4] || ""
-                            };
-                        }).filter(item => item.tuVungJP);
-
-                        duLieuQuyTrinhKho[key] = danhSachbuoc;
-                    }
-                }
-            } catch(e) {}
-        }
-    }
-
-    hienThiGiaoDienQuyTrinh('precut');
-}
-
-function hienThiGiaoDienQuyTrinh(loaiHienTai) {
-    let workflowTab = document.getElementById('process') || 
-                      document.getElementById('tab-process') || 
-                      document.getElementById('tab-workflow') || 
-                      document.getElementById('tab-quy-trinh') || 
-                      document.getElementById('tab-6') || 
-                      document.getElementById('workflow');
-    if (!workflowTab) {
-        let tabs = document.querySelectorAll('.tab-content');
-        workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
-    }
-    if (!workflowTab) return;
-
     let danhSachGoc = duLieuQuyTrinhKho[loaiHienTai] || [];
 
-    // Khởi tạo mảng xáo trộn ngẫu nhiên nếu chưa có
+    // Khởi tạo mảng xáo trộn ngẫu nhiên nếu chưa có hoặc đổi loại quy trình
     if (!window.shuffledState || window.shuffledStateKey !== loaiHienTai) {
         window.shuffledStateKey = loaiHienTai;
-        // Copy mảng gốc và xáo trộn ngẫu nhiên để ứng viên sắp xếp
         window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
     }
 
@@ -464,25 +451,24 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     workflowTab.innerHTML = htmlNoiDung;
 }
 
-// Hàm đổi tab quy trình
 function chuyenDoiQuyTrinh(loaiID) {
+    window.shuffledStateKey = loaiID;
+    let danhSachGoc = duLieuQuyTrinhKho[loaiID] || [];
+    window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
     hienThiGiaoDienQuyTrinh(loaiID);
 }
 
-// Xáo trộn lại vị trí
 function xaoTronLaiQuyTrinh(loaiID) {
     let danhSachGoc = duLieuQuyTrinhKho[loaiID] || [];
     window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
     hienThiGiaoDienQuyTrinh(loaiID);
 }
 
-// Di chuyển bước lên hoặc xuống
 function diChuyenBuoc(loaiID, index, direction) {
     let list = window.shuffledState;
     let targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= list.length) return;
 
-    // Hoán đổi vị trí
     let temp = list[index];
     list[index] = list[targetIndex];
     list[targetIndex] = temp;
@@ -490,17 +476,14 @@ function diChuyenBuoc(loaiID, index, direction) {
     hienThiGiaoDienQuyTrinh(loaiID);
 }
 
-// Kiểm tra kết quả đúng/sai
 function kiemTraKetQuaQuyTrinh(loaiID) {
     let currentList = window.shuffledState;
-    let originalList = duLieuQuyTrinhKho[loaiID] || [];
     let cards = document.querySelectorAll(`#list-container-${loaiID} .step-card`);
     let badge = document.getElementById(`status-badge-${loaiID}`);
 
     let isAllCorrect = true;
 
     currentList.forEach((item, index) => {
-        // So sánh STT thực tế với vị trí index hiện tại (đã cộng 1)
         if (item.stt === (index + 1)) {
             if (cards[index]) {
                 cards[index].classList.remove('bg-red-50', 'border-red-300');
