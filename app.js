@@ -1,4 +1,4 @@
-// ================= HỆ THỐNG KẾT NỐI TOÀN DIỆN: CÂU HỎI, TỪ VỰNG & BÀI TẬP TÍNH TOÁN =================
+// ================= HỆ THỐNG KẾT NỐI TOÀN DIỆN - HSJ WOOD APP =================
 const danhSachFileJson = [
     "CauHoi_1860.json",
     "TuVung.json",
@@ -32,10 +32,17 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab giao diện
+// Điều hướng Tab giao diện (Hỗ trợ quét tìm khung hiển thị linh hoạt nhất)
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-    const activeTab = document.getElementById('tab-' + tabId);
+    
+    // Tự động tìm khung tab theo mọi khả năng ID có thể có trong HTML
+    let activeTab = document.getElementById('tab-' + tabId) || 
+                    document.getElementById('tab-tinh-toan') || 
+                    document.getElementById('tab-calculation') || 
+                    document.getElementById('calc') ||
+                    document.querySelector('.tab-content:not(.hidden)');
+                    
     if (activeTab) activeTab.classList.remove('hidden');
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -55,13 +62,13 @@ function switchTab(tabId) {
         } else {
             taiRiengFileVocab();
         }
-    } else if (tabId === 'calc') {
-        // Tab Bài tập tính toán
-        let danhSachTinhToan = tatCaDuLieuKho.filter(item => item.ChuDe || item.CongThuc || item.DeBaigoc && item.CacBướcGiai);
+    } else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4') {
+        let danhSachTinhToan = tatCaDuLieuKho.filter(item => item.ChuDe || item.CongThuc || (item.DeBaigoc && item.CacBướcGiai));
         if (danhSachTinhToan.length === 0) {
-            danhSachTinhToan = tatCaDuLieuKho.filter(item => item.CongThuc);
+            taiRiengFileTinhToan();
+        } else {
+            hienThiBaiTapTinhToan(danhSachTinhToan);
         }
-        hienThiBaiTapTinhToan(danhSachTinhToan);
     } else if (tabId === 'practice' || tabId === 'exam') {
         questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.CongThuc);
         if (questions.length === 0) questions = tatCaDuLieuKho;
@@ -102,6 +109,12 @@ async function taiTatCaDuLieu() {
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
+        
+        // Tự động kiểm tra nếu đang ở tab tính toán thì render luôn
+        let danhSachTinhToan = tatCaDuLieuKho.filter(item => item.ChuDe || item.CongThuc || (item.DeBaigoc && item.CacBướcGiai));
+        if (danhSachTinhToan.length > 0) {
+            hienThiBaiTapTinhToan(danhSachTinhToan);
+        }
     }
 }
 
@@ -110,19 +123,27 @@ async function taiRiengFileVocab() {
         let res = await fetch('./TuVung.json');
         if (res.ok) {
             let data = await res.json();
-            if (Array.isArray(data)) {
-                hienThiDanhSachTuVung(data);
+            if (Array.isArray(data)) hienThiDanhSachTuVung(data);
+        }
+    } catch (e) { console.log("Lỗi tải Vocab"); }
+}
+
+async function taiRiengFileTinhToan() {
+    try {
+        let res = await fetch('./BaiTapTinhToan.json');
+        if (res.ok) {
+            let data = await res.json();
+            let danhSach = Array.isArray(data) ? data : (data.data || Object.values(data)[0] || []);
+            if (Array.isArray(danhSach)) {
+                hienThiBaiTapTinhToan(danhSach);
             }
         }
-    } catch (e) {
-        console.log("Không tải được TuVung.json riêng lẻ");
-    }
+    } catch (e) { console.log("Lỗi tải BaiTapTinhToan.json"); }
 }
 
 // Hàm tách Kanji và Hiragana thông minh cho từ vựng
 function parseTuVungJP(jpText) {
     if (!jpText) return { display: "", speech: "" };
-    
     let hiraganaIndex = -1;
     for (let i = 0; i < jpText.length; i++) {
         let code = jpText.charCodeAt(i);
@@ -131,7 +152,6 @@ function parseTuVungJP(jpText) {
             break;
         }
     }
-    
     if (hiraganaIndex > 0) {
         let kanjiPart = jpText.substring(0, hiraganaIndex);
         let hiraganaPart = jpText.substring(hiraganaIndex);
@@ -140,14 +160,10 @@ function parseTuVungJP(jpText) {
             speech: kanjiPart
         };
     }
-    
-    return {
-        display: jpText,
-        speech: jpText
-    };
+    return { display: jpText, speech: jpText };
 }
 
-// Hàm phát âm thanh tiếng Nhật (Text-to-Speech)
+// Hàm phát âm thanh tiếng Nhật
 function phatAmThanh(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -155,14 +171,12 @@ function phatAmThanh(text) {
         utterance.lang = 'ja-JP';
         utterance.rate = 0.85;
         window.speechSynthesis.speak(utterance);
-    } else {
-        alert("Trình duyệt của bạn không hỗ trợ phát âm thanh.");
     }
 }
 
-// Hiển thị danh sách Từ Vựng (Tab 1)
+// Hiển thị danh sách Từ Vựng
 function hienThiDanhSachTuVung(danhSach) {
-    const vocabTab = document.getElementById('tab-vocab');
+    let vocabTab = document.getElementById('tab-vocab') || document.getElementById('vocab');
     if (!vocabTab) return;
 
     let htmlNoiDung = `
@@ -179,32 +193,21 @@ function hienThiDanhSachTuVung(danhSach) {
     danhSach.forEach((item) => {
         let rawJp = item.TuVungJP || "";
         let parsed = parseTuVungJP(rawJp);
-        
-        let displayJp = parsed.display;
-        let speechText = parsed.speech;
-        let furi = item.Furigana ? `(${item.Furigana})` : "";
-        let vn = item.NghiaVN || "";
-        let trang = item.TrangSo ? `Trang ${item.TrangSo}` : "";
-
-        let speechClean = speechText.replace(/'/g, "\\'");
+        let speechClean = parsed.speech.replace(/'/g, "\\'");
 
         htmlNoiDung += `
             <div class="p-4 bg-slate-50 hover:bg-blue-50/50 border border-slate-200 rounded-xl transition flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-start">
                         <div class="flex items-center space-x-2">
-                            <span class="text-base font-bold text-blue-900">${displayJp}</span>
-                            <button onclick="phatAmThanh('${speechClean}')" class="p-1.5 bg-blue-100 hover:bg-orange-500 text-blue-800 hover:text-white rounded-full transition shadow-sm cursor-pointer" title="Nghe phát âm">
-                                🔊
-                            </button>
+                            <span class="text-base font-bold text-blue-900">${parsed.display}</span>
+                            <button onclick="phatAmThanh('${speechClean}')" class="p-1.5 bg-blue-100 hover:bg-orange-500 text-blue-800 hover:text-white rounded-full transition shadow-sm cursor-pointer" title="Nghe phát âm">🔊</button>
                         </div>
-                        <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">${trang}</span>
+                        <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">Trang ${item.TrangSo || 1}</span>
                     </div>
-                    <p class="text-xs text-orange-600 font-medium mt-0.5">${furi}</p>
+                    <p class="text-xs text-orange-600 font-medium mt-0.5">${item.Furigana ? `(${item.Furigana})` : ''}</p>
                 </div>
-                <div class="mt-3 pt-2 border-t border-slate-200/60 text-sm font-semibold text-slate-700">
-                    🇻🇳 ${vn}
-                </div>
+                <div class="mt-3 pt-2 border-t border-slate-200/60 text-sm font-semibold text-slate-700">🇻🇳 ${item.NghiaVN || ''}</div>
             </div>
         `;
     });
@@ -213,9 +216,13 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// Hiển thị danh sách Bài Tập Tính Toán Thực Chiến (Tab 4)
+// Hiển thị danh sách Bài Tập Tính Toán Thực Chiến (Tự động tìm khung hiển thị linh hoạt)
 function hienThiBaiTapTinhToan(danhSach) {
-    const calcTab = document.getElementById('tab-calc');
+    let calcTab = document.getElementById('tab-calc') || 
+                  document.getElementById('tab-tinh-toan') || 
+                  document.getElementById('calc') ||
+                  document.querySelector('.tab-content:not(.hidden)');
+                  
     if (!calcTab) return;
 
     let htmlNoiDung = `
@@ -258,7 +265,6 @@ function hienThiBaiTapTinhToan(danhSach) {
 // Hiển thị nội dung câu hỏi trắc nghiệm
 function renderQuestion() {
     if (!questions || questions.length === 0) return;
-    
     let q = questions[currentIndex];
     if (q.TuVungJP || q.CongThuc) {
         nextQuestion();
@@ -266,41 +272,27 @@ function renderQuestion() {
     }
     
     const progressEl = document.getElementById('quiz-progress');
-    if (progressEl) {
-        progressEl.innerText = `[${q.TrangSo || 'Ôn tập'}] - Câu ${currentIndex + 1} / ${questions.length}`;
-    }
+    if (progressEl) progressEl.innerText = `[${q.TrangSo || 'Ôn tập'}] - Câu ${currentIndex + 1} / ${questions.length}`;
 
     const questionTextEl = document.getElementById('question-text');
     if (questionTextEl) {
-        let tieuDe = q.TieuDeCau || q.TieuDe || "";
-        let noiDungJp = q.NoiDungJP || q.question || q.DeBaigoc || "Nội dung đang cập nhật...";
-        let noiDungVn = q.NoiDungVN || "";
-        
         questionTextEl.innerHTML = `
-            <span class="text-blue-700 font-bold text-base">${tieuDe}</span><br>
-            <div class="my-2 text-slate-900 font-semibold text-base whitespace-pre-line">${noiDungJp}</div>
-            <div class="text-slate-500 text-sm italic">${noiDungVn}</div>
+            <span class="text-blue-700 font-bold text-base">${q.TieuDeCau || q.TieuDe || ""}</span><br>
+            <div class="my-2 text-slate-900 font-semibold text-base whitespace-pre-line">${q.NoiDungJP || q.question || q.DeBaigoc || ""}</div>
+            <div class="text-slate-500 text-sm italic">${q.NoiDungVN || ""}</div>
         `;
     }
 
     let optsContainer = document.getElementById('options-container');
     if (optsContainer) {
         optsContainer.innerHTML = '';
-        
         let options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
-        if (options.length === 0) {
-            options = ["〇", "✖"];
-        }
+        if (options.length === 0) options = ["〇", "✖"];
 
         options.forEach(opt => {
             let btn = document.createElement('button');
             btn.className = "w-full text-left px-5 py-3.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-base font-bold transition cursor-pointer flex items-center justify-between mb-2 shadow-sm";
-            
-            let nhanHienThi = opt;
-            if (opt === "〇") nhanHienThi = "〇 — Đúng";
-            if (opt === "✖") nhanHienThi = "✖ — Sai";
-            btn.innerText = nhanHienThi;
-            
+            btn.innerText = (opt === "〇") ? "〇 — Đúng" : ((opt === "✖") ? "✖ — Sai" : opt);
             let dapAnDung = q.DapAn || q.answer || q.DapAnDung;
             btn.onclick = () => checkAnswer(btn, opt, dapAnDung, q.GiaiThich);
             optsContainer.appendChild(btn);
@@ -308,17 +300,12 @@ function renderQuestion() {
     }
     
     const expBox = document.getElementById('explanation-box');
-    if (expBox) {
-        expBox.classList.add('hidden');
-        expBox.innerText = '';
-    }
+    if (expBox) { expBox.classList.add('hidden'); expBox.innerText = ''; }
 }
 
-// Kiểm tra đáp án đúng/sai
 function checkAnswer(button, selectedOption, correctAnswer, explanation) {
     let optsContainer = document.getElementById('options-container');
     if (!optsContainer) return;
-
     let buttons = optsContainer.getElementsByTagName('button');
     for (let b of buttons) {
         b.disabled = true;
@@ -326,15 +313,12 @@ function checkAnswer(button, selectedOption, correctAnswer, explanation) {
             b.classList.add('bg-green-100', 'border-green-500', 'text-green-900', 'font-bold');
         }
     }
-
-    const isCorrect = correctAnswer && (selectedOption.trim() === String(correctAnswer).trim());
-    if (isCorrect) {
+    if (correctAnswer && selectedOption.trim() === String(correctAnswer).trim()) {
         button.classList.add('bg-green-500', 'text-white', 'border-green-600');
         score++;
     } else {
         button.classList.add('bg-red-100', 'border-red-500', 'text-red-900');
     }
-
     let expBox = document.getElementById('explanation-box');
     if (expBox && explanation) {
         expBox.innerText = `💡 Giải thích: ${explanation}`;
@@ -342,7 +326,6 @@ function checkAnswer(button, selectedOption, correctAnswer, explanation) {
     }
 }
 
-// Chuyển câu tiếp theo
 function nextQuestion() {
     if (currentIndex < questions.length - 1) {
         currentIndex++;
@@ -352,10 +335,6 @@ function nextQuestion() {
     }
 }
 
-// Quay lại câu trước
 function prevQuestion() {
-    if (currentIndex > 0) {
-        currentIndex--;
-        renderQuestion();
-    }
+    if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
