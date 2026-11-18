@@ -31,7 +31,7 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab giao diện (Hỗ trợ mở rộng Tab An Toàn)
+// Điều hướng Tab giao diện
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     
@@ -43,7 +43,7 @@ function switchTab(tabId) {
 
     if (!activeTab && (tabId === 'safety' || tabId === 'an-toan' || tabId === '5')) {
         let tabs = document.querySelectorAll('.tab-content');
-        if (tabs[4]) activeTab = tabs[4]; // Tab số 5 (An toàn)
+        if (tabs[4]) activeTab = tabs[4];
     }
                     
     if (activeTab) activeTab.classList.remove('hidden');
@@ -133,7 +133,7 @@ async function taiRiengFileTinhToan() {
     } catch (e) {}
 }
 
-// Tải chuyên biệt file NhanDangHinhAnh.json cho Tab An Toàn
+// Tải chuyên biệt file NhanDangHinhAnh.json
 async function taiRiengFileAnToan() {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -296,7 +296,17 @@ function toggleAnswer(index) {
     }
 }
 
-// Hiển thị chuyên biệt Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động
+// Hàm chuyển đổi link Google Drive sang định dạng nhúng ảnh trực tiếp
+function convertDriveLink(url) {
+    if (!url) return "";
+    let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+    }
+    return url;
+}
+
+// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Có Ảnh minh họa & Nút bấm chọn đáp án)
 function hienThiNhanDangAnToan(danhSach) {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -325,37 +335,50 @@ function hienThiNhanDangAnToan(danhSach) {
         let deVN = item.DeBaigocVN || "";
         let giaithich = item.GiaiThich || "";
         let dapan = item.DapAnDung || "";
+        let imgUrl = convertDriveLink(item.HinhAnhURL || "");
 
-        // Thu thập các lựa chọn A, I, U, E, O, Ka nếu có
         let luachonList = [
-            item.LuaChon_A, item.LuaChon_I, item.LuaChon_U, 
-            item.LuaChon_E, item.LuaChon_O, item.LuaChon_Ka
-        ].filter(Boolean);
+            { key: "ア", text: item.LuaChon_A },
+            { key: "イ", text: item.LuaChon_I },
+            { key: "ウ", text: item.LuaChon_U },
+            { key: "エ", text: item.LuaChon_E },
+            { key: "オ", text: item.LuaChon_O },
+            { key: "カ", text: item.LuaChon_Ka }
+        ].filter(opt => opt.text);
 
         htmlNoiDung += `
-            <div class="p-5 bg-gradient-to-r from-blue-50/30 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
+            <div class="p-5 bg-gradient-to-r from-blue-50/30 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-4">
                 <div class="flex justify-between items-center">
                     <span class="text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold">${chude}</span>
                     <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
                 </div>
 
+                <!-- Hiển thị Hình ảnh minh họa (nếu có link) -->
+                ${imgUrl ? `
+                    <div class="flex justify-center bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner">
+                        <img src="${imgUrl}" alt="Hình minh họa an toàn" class="max-h-[300px] object-contain rounded-lg" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'text-xs text-white p-4\'>⚠️ Không thể tải ảnh trực tiếp từ liên kết này.</div>';">
+                    </div>
+                ` : ''}
+
                 <!-- Nội dung đề bài Nhật & Việt -->
-                <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100">
+                <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100 shadow-2xs">
                     <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${deJP}</div>
                     <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>
                 </div>
 
-                <!-- Danh sách các đáp án lựa chọn -->
+                <!-- Danh sách các lựa chọn có thể click chọn -->
                 <div class="space-y-2">
-                    <p class="text-xs font-bold text-slate-500 uppercase">Các lựa chọn phương án:</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Click vào để chọn):</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         `;
 
         luachonList.forEach(opt => {
+            let safeOptText = opt.text.replace(/'/g, "\\'");
             htmlNoiDung += `
-                <div class="p-3 bg-white border border-slate-200 hover:border-blue-300 rounded-lg text-sm text-slate-800 font-medium shadow-2xs">
-                    ${opt}
-                </div>
+                <button onclick="selectSafetyOption(this, ${index})" class="w-full text-left p-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-sm text-slate-800 font-medium transition shadow-2xs cursor-pointer flex items-center space-x-2">
+                    <span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-700 font-bold text-xs shrink-0 checkbox-mark">◯</span>
+                    <span>${opt.text}</span>
+                </button>
             `;
         });
 
@@ -381,6 +404,28 @@ function hienThiNhanDangAnToan(danhSach) {
 
     htmlNoiDung += `</div></div>`;
     safetyTab.innerHTML = htmlNoiDung;
+}
+
+// Hàm tương tác khi học viên bấm chọn/bỏ chọn đáp án
+function selectSafetyOption(button, questionIndex) {
+    let mark = button.querySelector('.checkbox-mark');
+    if (button.classList.contains('bg-blue-500')) {
+        button.classList.remove('bg-blue-500', 'text-white', 'border-blue-600');
+        button.classList.add('bg-white', 'text-slate-800', 'border-slate-200');
+        if (mark) {
+            mark.classList.remove('bg-white', 'text-blue-600');
+            mark.classList.add('bg-slate-100', 'text-slate-700');
+            mark.innerText = "◯";
+        }
+    } else {
+        button.classList.add('bg-blue-500', 'text-white', 'border-blue-600');
+        button.classList.remove('bg-white', 'text-slate-800', 'border-slate-200');
+        if (mark) {
+            mark.classList.remove('bg-slate-100', 'text-slate-700');
+            mark.classList.add('bg-white', 'text-blue-600');
+            mark.innerText = "✓";
+        }
+    }
 }
 
 // Hàm bật/tắt hiển thị đáp án phần An Toàn
@@ -473,4 +518,3 @@ function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
 
- 
