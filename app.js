@@ -296,17 +296,7 @@ function toggleAnswer(index) {
     }
 }
 
-// Hàm chuyển đổi link Google Drive sang định dạng nhúng ảnh trực tiếp
-function convertDriveLink(url) {
-    if (!url) return "";
-    let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if (match && match[1]) {
-        return `https://lh3.googleusercontent.com/d/${match[1]}`;
-    }
-    return url;
-}
-
-// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Có Ảnh minh họa & Nút bấm chọn đáp án)
+// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Chọn nhiều đáp án đổi màu Vàng cực chuẩn)
 function hienThiNhanDangAnToan(danhSach) {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -323,7 +313,7 @@ function hienThiNhanDangAnToan(danhSach) {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="border-b pb-3">
                 <h2 class="text-lg font-bold text-blue-900">🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Hình Ảnh Nguy Cơ</h2>
-                <p class="text-xs text-slate-500">安全衛生・画像認識問題 - Tổng số: ${danhSach.length} câu hỏi</p>
+                <p class="text-xs text-slate-500">安全衛生・画像認識問題 - Tổng số: ${danhSach.length} câu hỏi (Chọn nhiều đáp án)</p>
             </div>
             <div class="space-y-6 max-h-[700px] overflow-y-auto pr-2">
     `;
@@ -335,15 +325,15 @@ function hienThiNhanDangAnToan(danhSach) {
         let deVN = item.DeBaigocVN || "";
         let giaithich = item.GiaiThich || "";
         let dapan = item.DapAnDung || "";
-        let imgUrl = convertDriveLink(item.HinhAnhURL || "");
+        let idHinh = item.ID_HinhAnh || `HA_0${index+1}`;
 
         let luachonList = [
-            { key: "ア", text: item.LuaChon_A },
-            { key: "イ", text: item.LuaChon_I },
-            { key: "ウ", text: item.LuaChon_U },
-            { key: "エ", text: item.LuaChon_E },
-            { key: "オ", text: item.LuaChon_O },
-            { key: "カ", text: item.LuaChon_Ka }
+            { text: item.LuaChon_A },
+            { text: item.LuaChon_I },
+            { text: item.LuaChon_U },
+            { text: item.LuaChon_E },
+            { text: item.LuaChon_O },
+            { text: item.LuaChon_Ka }
         ].filter(opt => opt.text);
 
         htmlNoiDung += `
@@ -353,12 +343,10 @@ function hienThiNhanDangAnToan(danhSach) {
                     <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
                 </div>
 
-                <!-- Hiển thị Hình ảnh minh họa (nếu có link) -->
-                ${imgUrl ? `
-                    <div class="flex justify-center bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner">
-                        <img src="${imgUrl}" alt="Hình minh họa an toàn" class="max-h-[300px] object-contain rounded-lg" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'text-xs text-white p-4\'>⚠️ Không thể tải ảnh trực tiếp từ liên kết này.</div>';">
-                    </div>
-                ` : ''}
+                <!-- Hiển thị ảnh (Chỉ hiện khi file ảnh tồn tại trên GitHub, nếu chưa có sẽ tự ẩn đi gọn gàng) -->
+                <div class="flex flex-col items-center justify-center bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner">
+                    <img src="./images/${idHinh}.png" alt="Ảnh minh họa ${idHinh}" class="max-h-[260px] object-contain rounded-lg" onerror="this.parentElement.style.display='none';">
+                </div>
 
                 <!-- Nội dung đề bài Nhật & Việt -->
                 <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100 shadow-2xs">
@@ -366,19 +354,18 @@ function hienThiNhanDangAnToan(danhSach) {
                     <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>
                 </div>
 
-                <!-- Danh sách các lựa chọn có thể click chọn -->
+                <!-- Danh sách các lựa chọn (Cho phép chọn nhiều đáp án, đổi màu vàng tạm thời) -->
                 <div class="space-y-2">
-                    <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Click vào để chọn):</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Có thể chọn nhiều đáp án - Đổi sang màu vàng):</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         `;
 
         luachonList.forEach(opt => {
-            let safeOptText = opt.text.replace(/'/g, "\\'");
             htmlNoiDung += `
-                <button onclick="selectSafetyOption(this, ${index})" class="w-full text-left p-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-sm text-slate-800 font-medium transition shadow-2xs cursor-pointer flex items-center space-x-2">
-                    <span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-700 font-bold text-xs shrink-0 checkbox-mark">◯</span>
+                <div onclick="toggleSafetyOption(this)" class="p-3 bg-white hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-xl text-sm text-slate-800 font-medium transition shadow-2xs cursor-pointer flex items-center space-x-3 select-none">
+                    <div class="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 font-bold text-xs shrink-0 box-mark border border-slate-300">◯</div>
                     <span>${opt.text}</span>
-                </button>
+                </div>
             `;
         });
 
@@ -406,23 +393,25 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// Hàm tương tác khi học viên bấm chọn/bỏ chọn đáp án
-function selectSafetyOption(button, questionIndex) {
-    let mark = button.querySelector('.checkbox-mark');
-    if (button.classList.contains('bg-blue-500')) {
-        button.classList.remove('bg-blue-500', 'text-white', 'border-blue-600');
-        button.classList.add('bg-white', 'text-slate-800', 'border-slate-200');
+// Hàm xử lý tương tác click chọn nhiều đáp án (Đổi sang màu vàng hổ phách)
+function toggleSafetyOption(element) {
+    let mark = element.querySelector('.box-mark');
+    if (element.classList.contains('bg-amber-100')) {
+        // Bỏ chọn (Trở về trạng thái trắng ban đầu)
+        element.classList.remove('bg-amber-100', 'border-amber-400', 'text-amber-950', 'font-bold');
+        element.classList.add('bg-white', 'border-slate-200', 'text-slate-800', 'font-medium');
         if (mark) {
-            mark.classList.remove('bg-white', 'text-blue-600');
-            mark.classList.add('bg-slate-100', 'text-slate-700');
+            mark.classList.remove('bg-amber-500', 'text-white', 'border-amber-600');
+            mark.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300');
             mark.innerText = "◯";
         }
     } else {
-        button.classList.add('bg-blue-500', 'text-white', 'border-blue-600');
-        button.classList.remove('bg-white', 'text-slate-800', 'border-slate-200');
+        // Chọn (Đổi sang màu vàng ấm áp, bật dấu check)
+        element.classList.add('bg-amber-100', 'border-amber-400', 'text-amber-950', 'font-bold');
+        element.classList.remove('bg-white', 'border-slate-200', 'text-slate-800', 'font-medium');
         if (mark) {
-            mark.classList.remove('bg-slate-100', 'text-slate-700');
-            mark.classList.add('bg-white', 'text-blue-600');
+            mark.classList.add('bg-amber-500', 'text-white', 'border-amber-600');
+            mark.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-300');
             mark.innerText = "✓";
         }
     }
