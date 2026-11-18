@@ -112,15 +112,14 @@ async function taiRiengFileVocab() {
     }
 }
 
-// Hàm thông minh: Tách Kanji và Hiragana dính liền để hiển thị sạch sẽ & đọc đúng 1 lần
+// Hàm tách Kanji và Hiragana dính liền để hiển thị sạch sẽ & đọc đúng 1 lần
 function parseTuVungJP(jpText) {
     if (!jpText) return { display: "", speech: "" };
-    // Tách phần chữ Hán (Kanji) và phần Hiragana bám đuôi
     let match = jpText.match(/^([\u4E00-\u9FAf\u3400-\u4DBF\u3005]+)([\u3040-\u309F]+)$/);
     if (match) {
         return {
             display: `${match[1]} <span class="text-slate-500 font-normal text-sm">(${match[2]})</span>`,
-            speech: match[1] // Chỉ đọc phần Kanji/từ gốc để loa không bị đọc lặp lại 2 lần
+            speech: match[1]
         };
     }
     return {
@@ -135,14 +134,14 @@ function phatAmThanh(text) {
         window.speechSynthesis.cancel();
         let utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'ja-JP';
-        utterance.rate = 0.85; // Tốc độ vừa phải, chuẩn phát âm người Nhật
+        utterance.rate = 0.85;
         window.speechSynthesis.speak(utterance);
     } else {
         alert("Trình duyệt của bạn không hỗ trợ phát âm thanh.");
     }
 }
 
-// Hiển thị danh sách Từ Vựng (Đã tách chữ và chuẩn hóa nút Loa)
+// Hiển thị danh sách Từ Vựng
 function hienThiDanhSachTuVung(danhSach) {
     const vocabTab = document.getElementById('tab-vocab');
     if (!vocabTab) return;
@@ -151,7 +150,7 @@ function hienThiDanhSachTuVung(danhSach) {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <div>
-                    <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ (Chuẩn Âm Thanh & Giao Diện)</h2>
+                    <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ (Chuẩn Âm Thanh)</h2>
                     <p class="text-xs text-slate-500">専門用語 (Senmon Yougo) - Tổng số: ${danhSach.length} từ</p>
                 </div>
             </div>
