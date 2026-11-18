@@ -1,4 +1,4 @@
-// ================= HỆ THỐNG ĐỌC TỪ VỰNG & TÁCH CHỮ / PHÁT ÂM CHUẨN =================
+// ================= HỆ THỐNG KẾT NỐI TOÀN DIỆN: CÂU HỎI, TỪ VỰNG & BÀI TẬP TÍNH TOÁN =================
 const danhSachFileJson = [
     "CauHoi_1860.json",
     "TuVung.json",
@@ -55,8 +55,15 @@ function switchTab(tabId) {
         } else {
             taiRiengFileVocab();
         }
+    } else if (tabId === 'calc') {
+        // Tab Bài tập tính toán
+        let danhSachTinhToan = tatCaDuLieuKho.filter(item => item.ChuDe || item.CongThuc || item.DeBaigoc && item.CacBướcGiai);
+        if (danhSachTinhToan.length === 0) {
+            danhSachTinhToan = tatCaDuLieuKho.filter(item => item.CongThuc);
+        }
+        hienThiBaiTapTinhToan(danhSachTinhToan);
     } else if (tabId === 'practice' || tabId === 'exam') {
-        questions = tatCaDuLieuKho.filter(item => item.NoiDungJP || item.question || item.DeBaigoc);
+        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.CongThuc);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
@@ -91,7 +98,7 @@ async function taiTatCaDuLieu() {
 
     if (tongHop.length > 0) {
         tatCaDuLieuKho = tongHop;
-        questions = tatCaDuLieuKho.filter(item => item.NoiDungJP || item.question || item.DeBaigoc);
+        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.CongThuc);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
@@ -112,7 +119,7 @@ async function taiRiengFileVocab() {
     }
 }
 
-// 1. HÀM TÁCH KANJI VÀ HIRAGANA THÔNG MINH
+// Hàm tách Kanji và Hiragana thông minh cho từ vựng
 function parseTuVungJP(jpText) {
     if (!jpText) return { display: "", speech: "" };
     
@@ -130,7 +137,7 @@ function parseTuVungJP(jpText) {
         let hiraganaPart = jpText.substring(hiraganaIndex);
         return {
             display: `${kanjiPart} <span class="text-slate-500 font-normal text-sm">(${hiraganaPart})</span>`,
-            speech: kanjiPart // Loa chỉ đọc phần từ chính để tránh lặp
+            speech: kanjiPart
         };
     }
     
@@ -140,7 +147,7 @@ function parseTuVungJP(jpText) {
     };
 }
 
-// 2. HÀM PHÁT ÂM THANH TIẾNG NHẬT (TEXT-TO-SPEECH)
+// Hàm phát âm thanh tiếng Nhật (Text-to-Speech)
 function phatAmThanh(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -153,7 +160,7 @@ function phatAmThanh(text) {
     }
 }
 
-// 3. HIỂN THỊ DANH SÁCH TỪ VỰNG KÈM NÚT LOA
+// Hiển thị danh sách Từ Vựng (Tab 1)
 function hienThiDanhSachTuVung(danhSach) {
     const vocabTab = document.getElementById('tab-vocab');
     if (!vocabTab) return;
@@ -162,14 +169,14 @@ function hienThiDanhSachTuVung(danhSach) {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <div>
-                    <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ (Tách Chữ & Âm Thanh Chuẩn)</h2>
+                    <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ (Có Âm Thanh)</h2>
                     <p class="text-xs text-slate-500">専門用語 (Senmon Yougo) - Tổng số: ${danhSach.length} từ</p>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-2">
     `;
 
-    danhSach.forEach((item, index) => {
+    danhSach.forEach((item) => {
         let rawJp = item.TuVungJP || "";
         let parsed = parseTuVungJP(rawJp);
         
@@ -206,12 +213,54 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// 4. HIỂN THỊ CÂU HỎI TRẮC NGHIỆM
+// Hiển thị danh sách Bài Tập Tính Toán Thực Chiến (Tab 4)
+function hienThiBaiTapTinhToan(danhSach) {
+    const calcTab = document.getElementById('tab-calc');
+    if (!calcTab) return;
+
+    let htmlNoiDung = `
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="border-b pb-3">
+                <h2 class="text-lg font-bold text-blue-900">🧮 Bài Tập Tính Toán Thực Chiến Ngành Gỗ</h2>
+                <p class="text-xs text-slate-500">計算問題 (Keisan Mondai) - Tổng số: ${danhSach.length} bài tập</p>
+            </div>
+            <div class="space-y-4 max-h-[650px] overflow-y-auto pr-2">
+    `;
+
+    danhSach.forEach((item, index) => {
+        let chude = item.ChuDe || "Bài tập tính toán";
+        let tieude = item.TieuDeBai || `Bài ${index + 1}`;
+        let debaigoc = item.DeBaigoc || item.question || "";
+        let congthuc = item.CongThuc || "";
+        let buocgiai = item.CacBướcGiai || item.GiaiThich || "";
+        let dapan = item.DapAnDung || item.answer || "";
+
+        htmlNoiDung += `
+            <div class="p-5 bg-gradient-to-r from-blue-50/40 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs bg-orange-100 text-orange-800 px-2.5 py-1 rounded-full font-bold">${chude}</span>
+                    <span class="text-sm font-bold text-blue-900">${tieude}</span>
+                </div>
+                <div class="text-slate-900 font-semibold text-base whitespace-pre-line bg-white p-3 rounded-lg border border-slate-100">
+                    📝 ${debaigoc}
+                </div>
+                ${congthuc ? `<div class="p-3 bg-blue-50 text-blue-900 rounded-lg text-sm border border-blue-100"><strong>📐 Công thức:</strong> ${congthuc}</div>` : ''}
+                ${buocgiai ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Các bước giải:</strong><br>${buocgiai}</div>` : ''}
+                ${dapan ? `<div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">✅ Đáp án: ${dapan}</div>` : ''}
+            </div>
+        `;
+    });
+
+    htmlNoiDung += `</div></div>`;
+    calcTab.innerHTML = htmlNoiDung;
+}
+
+// Hiển thị nội dung câu hỏi trắc nghiệm
 function renderQuestion() {
     if (!questions || questions.length === 0) return;
     
     let q = questions[currentIndex];
-    if (q.TuVungJP && !q.NoiDungJP && !q.question) {
+    if (q.TuVungJP || q.CongThuc) {
         nextQuestion();
         return;
     }
@@ -265,7 +314,7 @@ function renderQuestion() {
     }
 }
 
-// 5. KIỂM TRA ĐÁP ÁN
+// Kiểm tra đáp án đúng/sai
 function checkAnswer(button, selectedOption, correctAnswer, explanation) {
     let optsContainer = document.getElementById('options-container');
     if (!optsContainer) return;
@@ -293,7 +342,7 @@ function checkAnswer(button, selectedOption, correctAnswer, explanation) {
     }
 }
 
-// 6. CHUYỂN CÂU HỎI TIẾP THEO
+// Chuyển câu tiếp theo
 function nextQuestion() {
     if (currentIndex < questions.length - 1) {
         currentIndex++;
@@ -303,7 +352,7 @@ function nextQuestion() {
     }
 }
 
-// 7. QUAY LẠI CÂU TRƯỚC
+// Quay lại câu trước
 function prevQuestion() {
     if (currentIndex > 0) {
         currentIndex--;
