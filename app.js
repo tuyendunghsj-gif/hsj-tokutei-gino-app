@@ -1,14 +1,28 @@
-// ================= HỆ THỐNG KẾT NỐI DỮ LIỆU JSON - HSJ WOOD APP =================
+// ================= HỆ THỐNG KẾT NỐI & ĐỌC 11 FILE DỮ LIỆU JSON - HSJ WOOD APP =================
+const danhSachFileJson = [
+    "CauHoi_1860.json",
+    "TuVung.json",
+    "BaiTapTinhToan.json",
+    "NhanDangHinhAnh.json",
+    "GhepNoi_Precut.json",
+    "GhepNoi_Chip.json",
+    "GhepNoi_Flooring.json",
+    "GhepNoi_Tsukita.json",
+    "GhepNoi_GoubanLVL.json",
+    "GhepNoi_Shuuseizai.json",
+    "GhepNoi_Seizai.json"
+];
+
 let questions = [];
 let currentIndex = 0;
 let score = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("🚀 Đang khởi động kết nối dữ liệu...");
-    await taiFileJson();
+    console.log("🚀 Đang khởi động hệ thống kết nối dữ liệu HSJ Wood...");
+    await taiTatCaDuLieu();
 });
 
-// Xử lý màn hình chào
+// Xử lý màn hình chào mở đầu
 function enterApp() {
     const splashScreen = document.getElementById('splash-screen');
     if (splashScreen) {
@@ -17,7 +31,7 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab
+// Điều hướng Tab giao diện
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     const activeTab = document.getElementById('tab-' + tabId);
@@ -35,58 +49,61 @@ function switchTab(tabId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Hàm tải file JSON trực tiếp
-async function taiFileJson() {
+// Hàm tải thông minh: Quét qua danh sách 11 file JSON trên GitHub
+async function taiTatCaDuLieu() {
     const questionTextEl = document.getElementById('question-text');
-    if (questionTextEl) questionTextEl.innerText = "⏳ Đang kết nối tới file CauHoi_1860.json...";
+    if (questionTextEl) questionTextEl.innerText = "⏳ Đang kết nối tới kho dữ liệu GitHub...";
 
-    try {
-        // Thử gọi trực tiếp file CauHoi_1860.json (phải nằm chung thư mục trên GitHub)
-        let response = await fetch('./CauHoi_1860.json');
-        
-        if (!response.ok) {
-            throw new Error(`Không tìm thấy file trên GitHub (Mã lỗi: ${response.status})`);
+    let tatCaCauHoi = [];
+
+    for (let tenFile of danhSachFileJson) {
+        try {
+            let response = await fetch(`./${tenFile}`);
+            if (response.ok) {
+                let data = await response.json();
+                let danhSach = Array.isArray(data) ? data : (data.questions || data.data || Object.values(data)[0] || []);
+                
+                if (Array.isArray(danhSach) && danhSach.length > 0) {
+                    tatCaCauHoi = tatCaCauHoi.concat(danhSach);
+                    console.log(`✅ Đã tải thành công: ${tenFile} (${danhSach.length} mục)`);
+                }
+            }
+        } catch (err) {
+            console.warn(`⚠️ Không đọc được file ${tenFile}`);
         }
+    }
 
-        let data = await response.json();
-        
-        // Kiểm tra xem dữ liệu có phải là mảng không
-        if (Array.isArray(data) && data.length > 0) {
-            questions = data;
-            currentIndex = 0;
-            renderQuestion();
-            console.log(`✅ Đã tải thành công ${questions.length} câu hỏi!`);
-        } else {
-            throw new Error("File JSON có nội dung nhưng không đúng định dạng mảng [...]");
-        }
-
-    } catch (error) {
-        console.error("Lỗi kết nối JSON:", error);
+    if (tatCaCauHoi.length > 0) {
+        questions = tatCaCauHoi;
+        currentIndex = 0;
+        renderQuestion();
+        console.log(`🎉 Tổng số nội dung đã nạp vào app: ${questions.length} mục.`);
+    } else {
         if (questionTextEl) {
-            questionTextEl.innerText = `⚠️ Lỗi: ${error.message}. Chị hãy kiểm tra xem file 'CauHoi_1860.json' đã nằm chung thư mục gốc với 'index.html' trên GitHub chưa nhé!`;
+            questionTextEl.innerText = "⚠️ Không tìm thấy dữ liệu trong các file JSON. Chị kiểm tra lại tên file trên GitHub nhé!";
         }
     }
 }
 
-// Hiển thị câu hỏi lên giao diện
+// Hiển thị nội dung câu hỏi lên giao diện
 function renderQuestion() {
     if (!questions || questions.length === 0) return;
     
     let q = questions[currentIndex];
     
     const progressEl = document.getElementById('quiz-progress');
-    if (progressEl) progressEl.innerText = `Câu ${currentIndex + 1} / ${questions.length}`;
+    if (progressEl) {
+        progressEl.innerText = `Câu ${currentIndex + 1} / ${questions.length}`;
+    }
 
     const questionTextEl = document.getElementById('question-text');
     if (questionTextEl) {
-        // Hỗ trợ nhiều tên trường dữ liệu khác nhau từ file Excel xuất sang
-        questionTextEl.innerText = q.question || q.DeBaigoc || q.CauHoi || q.tieuDe || "Nội dung câu hỏi...";
+        questionTextEl.innerText = q.question || q.DeBaigoc || q.CauHoi || q.tieuDe || "Nội dung đang cập nhật...";
     }
 
     let optsContainer = document.getElementById('options-container');
     if (optsContainer) {
         optsContainer.innerHTML = '';
-        
         let options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
 
         options.forEach(opt => {
@@ -107,7 +124,7 @@ function renderQuestion() {
     }
 }
 
-// Kiểm tra đáp án
+// Kiểm tra đáp án đúng/sai
 function checkAnswer(button, selectedOption, correctAnswer, explanation) {
     let optsContainer = document.getElementById('options-container');
     if (!optsContainer) return;
@@ -135,18 +152,20 @@ function checkAnswer(button, selectedOption, correctAnswer, explanation) {
     }
 }
 
+// Chuyển câu tiếp theo
 function nextQuestion() {
     if (currentIndex < questions.length - 1) {
         currentIndex++;
         renderQuestion();
     } else {
-        alert(`🎉 Chúc mừng bạn đã hoàn thành! Tổng số câu đúng: ${score} / ${questions.length}`);
+        alert(`🎉 Chúc mừng bạn đã hoàn thành bài ôn tập! Tổng số câu đúng: ${score} / ${questions.length}`);
     }
 }
 
+// Quay lại câu trước
 function prevQuestion() {
     if (currentIndex > 0) {
         currentIndex--;
-        renderQuestion.call();
+        renderQuestion();
     }
 }
