@@ -85,7 +85,7 @@ async function taiTatCaDuLieu() {
     }
 }
 
-// Hiển thị nội dung câu hỏi lên giao diện
+// Hiển thị nội dung câu hỏi và đáp án 〇 / ✖ lên giao diện
 function renderQuestion() {
     if (!questions || questions.length === 0) return;
     
@@ -93,26 +93,46 @@ function renderQuestion() {
     
     const progressEl = document.getElementById('quiz-progress');
     if (progressEl) {
-        progressEl.innerText = `Câu ${currentIndex + 1} / ${questions.length}`;
+        progressEl.innerText = `[${q.TrangSo || 'Ôn tập'}] - Câu ${currentIndex + 1} / ${questions.length}`;
     }
 
+    // Đọc chính xác trường NoiDungJP và NoiDungVN từ file JSON của chị
     const questionTextEl = document.getElementById('question-text');
     if (questionTextEl) {
-        questionTextEl.innerText = q.question || q.DeBaigoc || q.CauHoi || q.tieuDe || "Nội dung đang cập nhật...";
+        let tieuDe = q.TieuDeCau || q.TieuDe || "";
+        let noiDungJp = q.NoiDungJP || q.question || q.DeBaigoc || "";
+        let noiDungVn = q.NoiDungVN || "";
+        
+        questionTextEl.innerHTML = `
+            <span class="text-blue-700 font-bold text-base">${tieuDe}</span><br>
+            <div class="my-2 text-slate-900 font-semibold text-base whitespace-pre-line">${noiDungJp}</div>
+            <div class="text-slate-500 text-sm italic">${noiDungVn}</div>
+        `;
     }
 
+    // Xử lý các nút đáp án (Tự động sinh nút 〇 và ✖ cho câu hỏi Đúng/Sai)
     let optsContainer = document.getElementById('options-container');
     if (optsContainer) {
         optsContainer.innerHTML = '';
+        
+        // Nếu file JSON có sẵn options thì dùng, nếu không thì mặc định là Đúng/Sai (〇 / ✖)
         let options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
+        if (options.length === 0) {
+            options = ["〇", "✖"];
+        }
 
         options.forEach(opt => {
             let btn = document.createElement('button');
-            btn.className = "w-full text-left px-4 py-3 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg text-sm font-medium transition cursor-pointer flex items-center justify-between mb-2";
-            btn.innerText = opt;
+            btn.className = "w-full text-left px-5 py-3.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-base font-bold transition cursor-pointer flex items-center justify-between mb-2 shadow-sm";
             
-            let dapAnDung = q.answer || q.DapAnDung || q.DapAn;
-            btn.onclick = () => checkAnswer(btn, opt, dapAnDung, q.GiaiThich || q.Giai_thich);
+            // Hiển thị tên nút trực quan (〇 -> 〇 Đúng, ✖ -> ✖ Sai)
+            let nhanHienThi = opt;
+            if (opt === "〇") nhanHienThi = "〇 — Đúng (Tươi cười)";
+            if (opt === "✖") nhanHienThi = "✖ — Sai";
+            btn.innerText = nhanHienThi;
+            
+            let dapAnDung = q.DapAn || q.answer || q.DapAnDung;
+            btn.onclick = () => checkAnswer(btn, opt, dapAnDung, q.GiaiThich);
             optsContainer.appendChild(btn);
         });
     }
@@ -137,7 +157,7 @@ function checkAnswer(button, selectedOption, correctAnswer, explanation) {
         }
     }
 
-    const isCorrect = correctAnswer && (selectedOption.trim() === String(correctAnswer).trim() || selectedOption.trim().includes(String(correctAnswer).trim()));
+    const isCorrect = correctAnswer && (selectedOption.trim() === String(correctAnswer).trim());
     if (isCorrect) {
         button.classList.add('bg-green-500', 'text-white', 'border-green-600');
         score++;
