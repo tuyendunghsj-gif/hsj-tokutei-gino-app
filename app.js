@@ -52,7 +52,7 @@ function switchTab(rawTabId) {
     let tabId = String(rawTabId || '').toLowerCase().replace('tab-', '');
     console.log("📌 Đang chuyển sang tab:", tabId);
 
-    // Dừng đồng hồ thi thử nếu đang chạy mà chuyển tab khác
+    // Dừng đồng hồ thi thử nếu chuyển sang tab khác
     if (!tabId.includes('3') && !tabId.includes('exam')) {
         if (examTimer) clearInterval(examTimer);
     }
@@ -189,6 +189,122 @@ async function taiRiengFileAnToan() {
             }
         }
     } catch (e) {}
+}
+
+// ================= CÁC HÀM HỖ TRỢ GOOGLE DRIVE LINK =================
+function convertDriveEmbedLink(url) {
+    if (!url) return "";
+    let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/preview`;
+    }
+    return url;
+}
+
+function convertDriveDirectLink(url) {
+    if (!url) return "#";
+    let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+        return `https://drive.google.com/file/d/${match[1]}/view?usp=sharing`;
+    }
+    return url;
+}
+
+// ================= MODULE 5: AN TOÀN VỆ SINH =================
+function hienThiNhanDangAnToan(danhSach) {
+    let safetyTab = document.getElementById('tab-safety') || 
+                    document.getElementById('tab-an-toan') || 
+                    document.getElementById('tab-5') || 
+                    document.getElementById('safety');
+                  
+    if (!safetyTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        if (tabs[4]) safetyTab = tabs[4];
+    }
+    if (!safetyTab) return;
+
+    let htmlNoiDung = `
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="border-b pb-3">
+                <h2 class="text-lg font-bold text-blue-900">🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Hình Ảnh Nguy Cơ</h2>
+                <p class="text-xs text-slate-500">安全衛生・画像認識問題 - Tổng số: ${danhSach.length} câu hỏi</p>
+            </div>
+            <div class="space-y-6 max-h-[700px] overflow-y-auto pr-2">
+    `;
+
+    danhSach.forEach((item, index) => {
+        let chude = item.ChuDe || "Thực kỹ / An toàn vệ sinh";
+        let tieude = item.TieuDeCau || `Câu ${index + 1}`;
+        let deJP = item.DeBaigocJP || "";
+        let deVN = item.DeBaigocVN || "";
+        let giaithich = item.GiaiThich || "";
+        let dapan = item.DapAnDung || "";
+        
+        let rawImgUrl = item.HinhAnhURL || item.LinkAnh || item.Image || "";
+        let embedUrl = convertDriveEmbedLink(rawImgUrl);
+        let directUrl = convertDriveDirectLink(rawImgUrl);
+
+        let luachonList = [
+            { text: item.LuaChon_A },
+            { text: item.LuaChon_I },
+            { text: item.LuaChon_U },
+            { text: item.LuaChon_E },
+            { text: item.LuaChon_O },
+            { text: item.LuaChon_Ka }
+        ].filter(opt => opt.text);
+
+        htmlNoiDung += `
+            <div class="p-5 bg-gradient-to-r from-blue-50/30 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold">${chude}</span>
+                    <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
+                </div>
+                ${embedUrl ? `
+                    <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner space-y-2">
+                        <iframe src="${embedUrl}" class="w-full h-[320px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
+                        <div class="text-center pb-1">
+                            <a href="${directUrl}" target="_blank" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 font-semibold transition">
+                                <span>🔗 Mở hình ảnh lớn trên Google Drive</span>
+                            </a>
+                        </div>
+                    </div>
+                ` : ''}
+                <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100">
+                    <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${deJP}</div>
+                    <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>
+                </div>
+                <div class="space-y-2">
+                    <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        `;
+
+        luachonList.forEach(opt => {
+            htmlNoiDung += `
+                <div onclick="toggleSafetyOption(this)" class="p-3 bg-white hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-xl text-sm text-slate-800 font-medium transition shadow-2xs cursor-pointer flex items-center space-x-3 select-none">
+                    <div class="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 font-bold text-xs shrink-0 box-mark border border-slate-300">◯</div>
+                    <span>${opt.text}</span>
+                </div>
+            `;
+        });
+
+        htmlNoiDung += `
+                    </div>
+                </div>
+                <button onclick="toggleSafetyAnswer(${index})" id="btn-safe-${index}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
+                    <span>👁️ Xem đáp án & Giải thích</span>
+                </button>
+                <div id="safe-ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
+                    <div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">
+                        ✅ Đáp án đúng: ${dapan}
+                    </div>
+                    ${giaithich ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Giải thích chi tiết:</strong><br>${giaithich}</div>` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    htmlNoiDung += `</div></div>`;
+    safetyTab.innerHTML = htmlNoiDung;
 }
 
 // ================= MODULE 3: THI THỬ MÔ PHỎNG ĐỀ THI THẬT (20 BỘ ĐỀ - 35 CÂU - 60 PHÚT) =================
@@ -359,7 +475,6 @@ function renderGiaoDienLamBaiThi(deSo) {
     let q = examQuestions[examCurrentIndex];
     let totalQ = examQuestions.length;
 
-    // Chuẩn hóa nội dung câu hỏi tùy theo loại câu (1860, An toàn, Tính toán, Quy trình)
     let tieudeCau = q.TieuDeCau || q.TieuDe || (examCurrentIndex === 32 ? "🛡️ Câu hỏi An toàn vệ sinh" : examCurrentIndex === 33 ? "🧮 Bài tập Tính toán thực chiến" : examCurrentIndex === 34 ? "⚙️ Câu hỏi Quy trình sản xuất" : `Câu ${examCurrentIndex + 1}`);
     let noidungJP = q.NoiDungJP || q.question || q.DeBaigocJP || q.DeBaigoc || q.__2 || q.tuVungJP || "";
     let noidungVN = q.NoiDungVN || q.DeBaigocVN || q.nghiaVN || "";
@@ -368,7 +483,6 @@ function renderGiaoDienLamBaiThi(deSo) {
     let embedUrl = convertDriveEmbedLink(rawImgUrl);
     let directUrl = convertDriveDirectLink(rawImgUrl);
 
-    // Xử lý danh sách đáp án
     let options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
     if (options.length === 0) {
         let lC = [q.LuaChon_A, q.LuaChon_I, q.LuaChon_U, q.LuaChon_E, q.LuaChon_O, q.LuaChon_Ka].filter(Boolean);
@@ -380,7 +494,6 @@ function renderGiaoDienLamBaiThi(deSo) {
 
     let htmlNoiDung = `
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5 max-w-4xl mx-auto">
-            <!-- Thanh tiêu đề & Đồng hồ đếm giờ -->
             <div class="flex justify-between items-center border-b pb-3 flex-wrap gap-2">
                 <div>
                     <h2 class="text-base font-bold text-blue-900">📝 Đang thi thử: Bộ đề số ${deSo}</h2>
@@ -395,7 +508,6 @@ function renderGiaoDienLamBaiThi(deSo) {
                 </div>
             </div>
 
-            <!-- Nội dung câu hỏi -->
             <div class="p-5 bg-gradient-to-r from-blue-50/30 to-slate-50 border border-slate-200 rounded-xl space-y-4">
                 <div class="flex justify-between items-center">
                     <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-bold">${tieudeCau}</span>
@@ -418,7 +530,6 @@ function renderGiaoDienLamBaiThi(deSo) {
                     ${noidungVN ? `<div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${noidungVN}</div>` : ''}
                 </div>
 
-                <!-- Các phương án lựa chọn -->
                 <div class="space-y-2">
                     <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn đáp án của bạn:</p>
                     <div class="grid grid-cols-1 gap-2">
@@ -442,7 +553,6 @@ function renderGiaoDienLamBaiThi(deSo) {
                 </div>
             </div>
 
-            <!-- Thanh điều hướng câu hỏi trước / sau -->
             <div class="flex justify-between items-center pt-2">
                 <button onclick="cauTruocThiThu()" ${examCurrentIndex === 0 ? 'disabled class="px-4 py-2 bg-slate-200 text-slate-400 rounded-xl text-xs font-bold cursor-not-allowed"' : 'class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"'}>
                     ⬅️ Câu trước
@@ -450,7 +560,6 @@ function renderGiaoDienLamBaiThi(deSo) {
                 <div class="flex gap-1 overflow-x-auto max-w-[300px] p-1">
     `;
 
-    // Thanh danh mục số câu nhỏ bên dưới
     for (let i = 0; i < totalQ; i++) {
         let answeredClass = examUserAnswers[i] ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-700";
         let currentClass = i === examCurrentIndex ? "ring-2 ring-blue-600 font-bold" : "";
@@ -520,7 +629,7 @@ function nopBaiThiThu() {
 
     let totalQ = examQuestions.length;
     let phanTram = Math.round((soCauDung / totalQ) * 100);
-    let ketQuaDat = soCauDung >= Math.ceil(totalQ * 0.7); // Đạt từ 70% trở lên
+    let ketQuaDat = soCauDung >= Math.ceil(totalQ * 0.7);
 
     let examTab = document.getElementById('tab-exam') || document.getElementById('exam') || document.getElementById('tab-3');
     if (!examTab) return;
@@ -561,7 +670,7 @@ function nopBaiThiThu() {
     examTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (CHỈ HIỂN THỊ 1 ẢNH DUY NHẤT CHO MỖI QUY TRÌNH) =================
+// ================= MODULE 6: QUY TRÌNH SẢN XUẤT =================
 async function taiRiengTatCaFileQuyTrinh() {
     let workflowTab = document.getElementById('process') || 
                       document.getElementById('tab-process') || 
