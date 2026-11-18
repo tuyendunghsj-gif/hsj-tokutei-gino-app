@@ -298,7 +298,7 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (TƯƠNG THÍCH TUYỆT ĐỐI 7 FILE JSON) =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (TRÍCH XUẤT THEO VỊ TRÍ CỘT 0, 1, 2, 3, 4) =================
 async function taiRiengTatCaFileQuyTrinh() {
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
@@ -327,20 +327,19 @@ async function taiRiengTatCaFileQuyTrinh() {
                 let res = await fetch(`./${filesMap[key]}`);
                 if (res.ok) {
                     let data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        // Lọc thông minh: Lấy tất cả các phần tử có chứa dữ liệu tiếng Nhật (__1 hoặc TuVungJP)
-                        let danhSachbuoc = data.filter(item => item.__1 || item.TuVungJP || item.__2).map((item, idx) => {
+                    if (Array.isArray(data) && data.length > 1) {
+                        // Bỏ qua dòng tiêu đề đầu tiên (index 0), lấy từ index 1 trở đi
+                        let danhSachbuoc = data.slice(1).map((item, idx) => {
+                            let values = Object.values(item);
                             return {
-                                stt: item["BÀI 7: Quy trình sản xuất Cấu kiện nhà gỗ tiền chế (プレカット - Pre-cut)"] || 
-                                     item["STT"] || 
-                                     item[Object.keys(item)[0]] || 
-                                     (idx + 1),
-                                hinhAnh: item[""] || item.HinhAnhURL || item.LinkAnh || "",
-                                tuVungJP: item["__1"] || item.TuVungJP || "",
-                                nghiaVN: item["__2"] || item.NghiaVN || "",
-                                giaiThich: item["__3"] || item.GiaiThich || ""
+                                stt: values[0] || (idx + 1),
+                                hinhAnh: values[1] || "",
+                                tuVungJP: values[2] || "",
+                                nghiaVN: values[3] || "",
+                                giaiThich: values[4] || ""
                             };
-                        });
+                        }).filter(item => item.tuVungJP); // Chỉ lấy dòng có nội dung tiếng Nhật
+
                         if (danhSachbuoc.length > 0) {
                             duLieuQuyTrinhKho[key] = danhSachbuoc;
                         }
