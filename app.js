@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await taiTatCaDuLieu();
 });
 
-// Xử lý màn hình chào mở đầu
 function enterApp() {
     const splashScreen = document.getElementById('splash-screen');
     if (splashScreen) {
@@ -41,14 +40,15 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab giao diện toàn diện
 function switchTab(tabId) {
+    console.log("📌 Đang chuyển sang tab:", tabId);
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     
     let activeTab = document.getElementById('tab-' + tabId) || 
                     document.getElementById('tab-quy-trinh') || 
                     document.getElementById('tab-workflow') || 
                     document.getElementById('tab-6') || 
+                    document.getElementById('workflow') ||
                     document.getElementById(tabId);
 
     if (!activeTab) {
@@ -61,7 +61,12 @@ function switchTab(tabId) {
         else if (tabId === 'workflow' || tabId === 'quy-trinh' || tabId === '6') activeTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
     }
                     
-    if (activeTab) activeTab.classList.remove('hidden');
+    if (activeTab) {
+        activeTab.classList.remove('hidden');
+        console.log("✅ Đã kích hoạt hiển thị tab:", activeTab.id || "không rõ ID");
+    } else {
+        console.error("⚠️ Không tìm thấy khung hiển thị tab tương ứng!");
+    }
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('bg-blue-50', 'text-blue-800', 'font-bold');
@@ -81,7 +86,7 @@ function switchTab(tabId) {
         taiRiengFileTinhToan();
     } else if (tabId === 'safety' || tabId === 'an-toan' || tabId === '5') {
         taiRiengFileAnToan();
-    } else if (tabId === 'workflow' || tabId === 'quy-trinh' || tabId === '6') {
+    } else if (tabId === 'workflow' || tabId === 'quy-trinh' || tabId === '6' || tabId === 'quy_trinh') {
         taiRiengTatCaFileQuyTrinh();
     } else if (tabId === 'practice' || tabId === 'exam') {
         questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
@@ -145,7 +150,6 @@ async function taiRiengFileTinhToan() {
     } catch (e) {}
 }
 
-// Tải file NhanDangHinhAnh.json cho phần 5. An Toàn
 async function taiRiengFileAnToan() {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -167,16 +171,11 @@ async function taiRiengFileAnToan() {
             let danhSach = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
             if (Array.isArray(danhSach) && danhSach.length > 0) {
                 hienThiNhanDangAnToan(danhSach);
-            } else {
-                safetyTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ File NhanDangHinhAnh.json trống dữ liệu.</div>`;
             }
         }
-    } catch (e) { 
-        safetyTab.innerHTML = `<div class="p-6 text-center text-red-500">⚠️ Lỗi tải file NhanDangHinhAnh.json</div>`;
-    }
+    } catch (e) {}
 }
 
-// Hàm chuẩn hóa link Google Drive sang định dạng nhúng xem trước
 function convertDriveEmbedLink(url) {
     if (!url) return "";
     let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
@@ -186,7 +185,6 @@ function convertDriveEmbedLink(url) {
     return url;
 }
 
-// Hàm lấy link gốc để mở tab mới nếu iframe bị chặn
 function convertDriveDirectLink(url) {
     if (!url) return "#";
     let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
@@ -196,7 +194,6 @@ function convertDriveDirectLink(url) {
     return url;
 }
 
-// Hiển thị Tab 5: An Toàn Vệ Sinh & Nhận Dạng Hình Ảnh
 function hienThiNhanDangAnToan(danhSach) {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -213,7 +210,7 @@ function hienThiNhanDangAnToan(danhSach) {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="border-b pb-3">
                 <h2 class="text-lg font-bold text-blue-900">🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Hình Ảnh Nguy Cơ</h2>
-                <p class="text-xs text-slate-500">安全衛生・画像認識問題 - Tổng số: ${danhSach.length} câu hỏi (Chọn nhiều đáp án)</p>
+                <p class="text-xs text-slate-500">安全衛生・画像認識問題 - Tổng số: ${danhSach.length} câu hỏi</p>
             </div>
             <div class="space-y-6 max-h-[700px] overflow-y-auto pr-2">
     `;
@@ -245,7 +242,6 @@ function hienThiNhanDangAnToan(danhSach) {
                     <span class="text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold">${chude}</span>
                     <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
                 </div>
-
                 ${embedUrl ? `
                     <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner space-y-2">
                         <iframe src="${embedUrl}" class="w-full h-[320px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
@@ -256,14 +252,12 @@ function hienThiNhanDangAnToan(danhSach) {
                         </div>
                     </div>
                 ` : ''}
-
-                <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100 shadow-2xs">
+                <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100">
                     <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${deJP}</div>
                     <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>
                 </div>
-
                 <div class="space-y-2">
-                    <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Có thể chọn nhiều đáp án - Đổi sang màu vàng):</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án:</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         `;
 
@@ -279,11 +273,9 @@ function hienThiNhanDangAnToan(danhSach) {
         htmlNoiDung += `
                     </div>
                 </div>
-
                 <button onclick="toggleSafetyAnswer(${index})" id="btn-safe-${index}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
                     <span>👁️ Xem đáp án & Giải thích</span>
                 </button>
-
                 <div id="safe-ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
                     <div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">
                         ✅ Đáp án đúng: ${dapan}
@@ -298,8 +290,9 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (TỰ ĐỘNG BỎ QUA DÒNG TIÊU ĐỀ ĐẦU TIÊN) =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (CÓ DEBUG CONSOLE) =================
 async function taiRiengTatCaFileQuyTrinh() {
+    console.log("⚙️ Đang bắt đầu tải 7 file quy trình sản xuất...");
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
                       document.getElementById('tab-6') || 
@@ -309,7 +302,13 @@ async function taiRiengTatCaFileQuyTrinh() {
         let tabs = document.querySelectorAll('.tab-content');
         workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
     }
-    if (!workflowTab) return;
+    
+    if (!workflowTab) {
+        console.error("❌ Không tìm thấy tab Quy Trình trong HTML!");
+        return;
+    }
+
+    workflowTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải dữ liệu 7 quy trình sản xuất...</div>`;
 
     if (duLieuQuyTrinhKho.precut.length === 0) {
         const filesMap = {
@@ -324,14 +323,15 @@ async function taiRiengTatCaFileQuyTrinh() {
 
         for (let key in filesMap) {
             try {
-                let res = await fetch(`./${filesMap[key]}`);
+                let url = `./${filesMap[key]}`;
+                console.log(`📥 Đang fetch: ${url}`);
+                let res = await fetch(url);
                 if (res.ok) {
                     let data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        // Tự động bỏ qua phần tử đầu tiên (dòng tiêu đề), lấy từ phần tử thứ 2 trở đi
+                    console.log(`✅ Tải thành công ${filesMap[key]}, số phần tử:`, data.length);
+                    if (Array.isArray(data) && data.length > 1) {
                         let danhSachbuoc = data.slice(1).map((item, idx) => {
                             let values = Object.values(item);
-                            // Lấy STT, Link ảnh, Từ vựng JP, Nghĩa VN, Giải thích theo đúng thứ tự các cột
                             return {
                                 stt: values[0] || (idx + 1),
                                 hinhAnh: values[1] || "",
@@ -339,14 +339,17 @@ async function taiRiengTatCaFileQuyTrinh() {
                                 nghiaVN: values[3] || "",
                                 giaiThich: values[4] || ""
                             };
-                        }).filter(item => item.tuVungJP); // Chỉ lấy dòng có nội dung tiếng Nhật
+                        }).filter(item => item.tuVungJP);
 
-                        if (danhSachbuoc.length > 0) {
-                            duLieuQuyTrinhKho[key] = danhSachbuoc;
-                        }
+                        duLieuQuyTrinhKho[key] = danhSachbuoc;
+                        console.log(`✨ Đã xử lý xong ${key}:`, danhSachbuoc.length, "bước");
                     }
+                } else {
+                    console.warn(`⚠️ Không thể tải file ${filesMap[key]} (HTTP status: ${res.status})`);
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error(`❌ Lỗi khi đọc file ${filesMap[key]}:`, e);
+            }
         }
     }
 
@@ -365,6 +368,7 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     if (!workflowTab) return;
 
     let danhSachHienTai = duLieuQuyTrinhKho[loaiHienTai] || [];
+    console.log(`🖥️ Đang hiển thị giao diện quy trình [${loaiHienTai}], tổng số bước:`, danhSachHienTai.length);
 
     let menuNutBam = [
         { id: 'precut', name: '🏠 Nhà Gỗ Pre-cut' },
@@ -383,7 +387,6 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
                 <p class="text-xs text-slate-500">木材加工・製造工程 (Kotei Mondai) - Hệ thống 7 quy trình thực chiến</p>
             </div>
 
-            <!-- Thanh chọn loại quy trình -->
             <div class="flex flex-wrap gap-2 pb-2 border-b border-slate-100">
     `;
 
@@ -399,12 +402,11 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     htmlNoiDung += `
             </div>
 
-            <!-- Danh sách nội dung quy trình -->
             <div class="space-y-4 max-h-[620px] overflow-y-auto pr-2">
     `;
 
     if (danhSachHienTai.length === 0) {
-        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Đang tải dữ liệu quy trình này...</div>`;
+        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Không có dữ liệu hoặc file JSON đang trống / lỗi đường dẫn. Hãy kiểm tra F12 Console.</div>`;
     } else {
         danhSachHienTai.forEach((item, index) => {
             let embedUrl = convertDriveEmbedLink(item.hinhAnh);
@@ -446,7 +448,6 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     workflowTab.innerHTML = htmlNoiDung;
 }
 
-// Hàm xử lý tương tác click chọn nhiều đáp án (Màu vàng hổ phách)
 function toggleSafetyOption(element) {
     let mark = element.querySelector('.box-mark');
     if (element.classList.contains('bg-amber-100')) {
