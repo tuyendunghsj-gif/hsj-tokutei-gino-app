@@ -27,12 +27,10 @@ let duLieuQuyTrinhKho = {
     seizai: []
 };
 
-// Lưu trữ trạng thái sắp xếp hiện tại của người dùng
-let userSequenceState = [];
-
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("🚀 Đang khởi động hệ thống nạp dữ liệu HSJ Wood...");
     await taiTatCaDuLieu();
+    await taiRiengTatCaFileQuyTrinh();
 });
 
 function enterApp() {
@@ -53,7 +51,8 @@ function switchTab(rawTabId) {
                     document.getElementById(tabId) || 
                     document.getElementById('tab-quy-trinh') || 
                     document.getElementById('tab-workflow') || 
-                    document.getElementById('tab-6');
+                    document.getElementById('tab-6') ||
+                    document.getElementById('process');
 
     if (!activeTab) {
         let tabs = document.querySelectorAll('.tab-content');
@@ -88,7 +87,7 @@ function switchTab(rawTabId) {
     } else if (tabId.includes('5') || tabId.includes('safety') || tabId.includes('an-toan')) {
         taiRiengFileAnToan();
     } else if (tabId.includes('6') || tabId.includes('process') || tabId.includes('workflow') || tabId.includes('quy') || tabId.includes('trinh')) {
-        taiRiengTatCaFileQuyTrinh();
+        hienThiGiaoDienQuyTrinh('precut');
     } else if (tabId.includes('2') || tabId.includes('3') || tabId.includes('practice') || tabId.includes('exam')) {
         questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
         if (questions.length === 0) questions = tatCaDuLieuKho;
@@ -291,8 +290,47 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (TÍCH HỢP MINI-GAME SẮP XẾP ĐÚNG THỨ TỰ) =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH & MINI-GAME SẮP XẾP =================
 async function taiRiengTatCaFileQuyTrinh() {
+    if (duLieuQuyTrinhKho.precut.length > 0) return;
+
+    const filesMap = {
+        precut: "GhepNoi_Precut.json",
+        seizai: "GhepNoi_Seizai.json",
+        shuuseizai: "GhepNoi_Shuuseizai.json",
+        goubanLVL: "GhepNoi_GoubanLVL.json",
+        flooring: "GhepNoi_Flooring.json",
+        tsukita: "GhepNoi_Tsukita.json",
+        chip: "GhepNoi_Chip.json"
+    };
+
+    for (let key in filesMap) {
+        try {
+            let res = await fetch(`./${filesMap[key]}`);
+            if (res.ok) {
+                let data = await res.json();
+                if (Array.isArray(data) && data.length > 1) {
+                    let danhSachbuoc = data.slice(1).map((item, idx) => {
+                        let values = Object.values(item);
+                        return {
+                            stt: Number(values[0]) || (idx + 1),
+                            hinhAnh: values[1] || "",
+                            tuVungJP: values[2] || "",
+                            nghiaVN: values[3] || "",
+                            giaiThich: values[4] || ""
+                        };
+                    }).filter(item => item.tuVungJP);
+
+                    duLieuQuyTrinhKho[key] = danhSachbuoc;
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+async function hienThiGiaoDienQuyTrinh(loaiHienTai) {
+    await taiRiengTatCaFileQuyTrinh();
+
     let workflowTab = document.getElementById('process') || 
                       document.getElementById('tab-process') || 
                       document.getElementById('tab-workflow') || 
@@ -306,65 +344,11 @@ async function taiRiengTatCaFileQuyTrinh() {
     }
     if (!workflowTab) return;
 
-    workflowTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải dữ liệu quy trình sản xuất...</div>`;
-
-    if (duLieuQuyTrinhKho.precut.length === 0) {
-        const filesMap = {
-            precut: "GhepNoi_Precut.json",
-            seizai: "GhepNoi_Seizai.json",
-            shuuseizai: "GhepNoi_Shuuseizai.json",
-            goubanLVL: "GhepNoi_GoubanLVL.json",
-            flooring: "GhepNoi_Flooring.json",
-            tsukita: "GhepNoi_Tsukita.json",
-            chip: "GhepNoi_Chip.json"
-        };
-
-        for (let key in filesMap) {
-            try {
-                let res = await fetch(`./${filesMap[key]}`);
-                if (res.ok) {
-                    let data = await res.json();
-                    if (Array.isArray(data) && data.length > 1) {
-                        let danhSachbuoc = data.slice(1).map((item, idx) => {
-                            let values = Object.values(item);
-                            return {
-                                stt: Number(values[0]) || (idx + 1),
-                                hinhAnh: values[1] || "",
-                                tuVungJP: values[2] || "",
-                                nghiaVN: values[3] || "",
-                                giaiThich: values[4] || ""
-                            };
-                        }).filter(item => item.tuVungJP);
-
-                        duLieuQuyTrinhKho[key] = danhSachbuoc;
-                    }
-                }
-            } catch(e) {}
-        }
-    }
-
-    hienThiGiaoDienQuyTrinh('precut');
-}
-
-function hienThiGiaoDienQuyTrinh(loaiHienTai) {
-    let workflowTab = document.getElementById('process') || 
-                      document.getElementById('tab-process') || 
-                      document.getElementById('tab-workflow') || 
-                      document.getElementById('tab-quy-trinh') || 
-                      document.getElementById('tab-6') || 
-                      document.getElementById('workflow');
-    if (!workflowTab) {
-        let tabs = document.querySelectorAll('.tab-content');
-        workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
-    }
-    if (!workflowTab) return;
-
     let danhSachGoc = duLieuQuyTrinhKho[loaiHienTai] || [];
 
-    // Khởi tạo mảng xáo trộn ngẫu nhiên nếu chưa có
+    // Khởi tạo mảng xáo trộn ngẫu nhiên nếu đổi quy trình hoặc chưa có
     if (!window.shuffledState || window.shuffledStateKey !== loaiHienTai) {
         window.shuffledStateKey = loaiHienTai;
-        // Copy mảng gốc và xáo trộn ngẫu nhiên để ứng viên sắp xếp
         window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
     }
 
@@ -464,25 +448,24 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     workflowTab.innerHTML = htmlNoiDung;
 }
 
-// Hàm đổi tab quy trình
 function chuyenDoiQuyTrinh(loaiID) {
+    window.shuffledStateKey = loaiID;
+    let danhSachGoc = duLieuQuyTrinhKho[loaiID] || [];
+    window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
     hienThiGiaoDienQuyTrinh(loaiID);
 }
 
-// Xáo trộn lại vị trí
 function xaoTronLaiQuyTrinh(loaiID) {
     let danhSachGoc = duLieuQuyTrinhKho[loaiID] || [];
     window.shuffledState = [...danhSachGoc].sort(() => Math.random() - 0.5);
     hienThiGiaoDienQuyTrinh(loaiID);
 }
 
-// Di chuyển bước lên hoặc xuống
 function diChuyenBuoc(loaiID, index, direction) {
     let list = window.shuffledState;
     let targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= list.length) return;
 
-    // Hoán đổi vị trí
     let temp = list[index];
     list[index] = list[targetIndex];
     list[targetIndex] = temp;
@@ -490,17 +473,14 @@ function diChuyenBuoc(loaiID, index, direction) {
     hienThiGiaoDienQuyTrinh(loaiID);
 }
 
-// Kiểm tra kết quả đúng/sai
 function kiemTraKetQuaQuyTrinh(loaiID) {
     let currentList = window.shuffledState;
-    let originalList = duLieuQuyTrinhKho[loaiID] || [];
     let cards = document.querySelectorAll(`#list-container-${loaiID} .step-card`);
     let badge = document.getElementById(`status-badge-${loaiID}`);
 
     let isAllCorrect = true;
 
     currentList.forEach((item, index) => {
-        // So sánh STT thực tế với vị trí index hiện tại (đã cộng 1)
         if (item.stt === (index + 1)) {
             if (cards[index]) {
                 cards[index].classList.remove('bg-red-50', 'border-red-300');
@@ -528,230 +508,4 @@ function kiemTraKetQuaQuyTrinh(loaiID) {
         }
         alert("❌ Vẫn còn bước sắp xếp sai (hiển thị khung đỏ). Bạn hãy điều chỉnh lại vị trí các bước và kiểm tra lại nhé!");
     }
-}
-
-function toggleSafetyOption(element) {
-    let mark = element.querySelector('.box-mark');
-    if (element.classList.contains('bg-amber-100')) {
-        element.classList.remove('bg-amber-100', 'border-amber-400', 'text-amber-950', 'font-bold');
-        element.classList.add('bg-white', 'border-slate-200', 'text-slate-800', 'font-medium');
-        if (mark) {
-            mark.classList.remove('bg-amber-500', 'text-white', 'border-amber-600');
-            mark.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-300');
-            mark.innerText = "◯";
-        }
-    } else {
-        element.classList.add('bg-amber-100', 'border-amber-400', 'text-amber-950', 'font-bold');
-        element.classList.remove('bg-white', 'border-slate-200', 'text-slate-800', 'font-medium');
-        if (mark) {
-            mark.classList.add('bg-amber-500', 'text-white', 'border-amber-600');
-            mark.classList.remove('bg-slate-100', 'text-slate-600', 'border-slate-300');
-            mark.innerText = "✓";
-        }
-    }
-}
-
-function toggleSafetyAnswer(index) {
-    let box = document.getElementById(`safe-ans-${index}`);
-    let btn = document.getElementById(`btn-safe-${index}`);
-    if (box && btn) {
-        if (box.style.display === 'none') {
-            box.style.display = 'block';
-            btn.innerHTML = `<span>🙈 Thu gọn đáp án</span>`;
-            btn.className = "px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
-        } else {
-            box.style.display = 'none';
-            btn.innerHTML = `<span>👁️ Xem đáp án & Giải thích</span>`;
-            btn.className = "px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
-        }
-    }
-}
-
-function parseTuVungJP(jpText) {
-    if (!jpText) return { display: "", speech: "" };
-    let hiraganaIndex = -1;
-    for (let i = 0; i < jpText.length; i++) {
-        let code = jpText.charCodeAt(i);
-        if (code >= 0x3040 && code <= 0x309F) { hiraganaIndex = i; break; }
-    }
-    if (hiraganaIndex > 0) {
-        return {
-            display: `${jpText.substring(0, hiraganaIndex)} <span class="text-slate-500 font-normal text-sm">(${jpText.substring(hiraganaIndex)})</span>`,
-            speech: jpText.substring(0, hiraganaIndex)
-        };
-    }
-    return { display: jpText, speech: jpText };
-}
-
-function phatAmThanh(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        let utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ja-JP';
-        utterance.rate = 0.85;
-        window.speechSynthesis.speak(utterance);
-    }
-}
-
-function hienThiDanhSachTuVung(danhSach) {
-    let vocabTab = document.getElementById('tab-vocab') || document.getElementById('vocab');
-    if (!vocabTab) return;
-    let htmlNoiDung = `
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ (Tổng số: ${danhSach.length} từ)</h2>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-2">
-    `;
-    danhSach.forEach((item) => {
-        let parsed = parseTuVungJP(item.TuVungJP || "");
-        htmlNoiDung += `
-            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-base font-bold text-blue-900">${parsed.display}</span>
-                            <button onclick="phatAmThanh('${parsed.speech.replace(/'/g, "\\'")}')" class="p-1.5 bg-blue-100 hover:bg-orange-500 text-blue-800 hover:text-white rounded-full transition cursor-pointer">🔊</button>
-                        </div>
-                        <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">Trang ${item.TrangSo || 1}</span>
-                    </div>
-                    <p class="text-xs text-orange-600 font-medium mt-0.5">${item.Furigana ? `(${item.Furigana})` : ''}</p>
-                </div>
-                <div class="mt-3 pt-2 border-t border-slate-200/60 text-sm font-semibold text-slate-700">🇻🇳 ${item.NghiaVN || ''}</div>
-            </div>
-        `;
-    });
-    htmlNoiDung += `</div></div>`;
-    vocabTab.innerHTML = htmlNoiDung;
-}
-
-function hienThiBaiTapTinhToan(danhSach) {
-    let calcTab = document.getElementById('tab-calc') || document.getElementById('tab-tinh-toan') || document.getElementById('tab-4');
-    if (!calcTab) {
-        let tabs = document.querySelectorAll('.tab-content');
-        if (tabs[3]) calcTab = tabs[3];
-    }
-    if (!calcTab) return;
-    let danhSachBaiTap = danhSach.filter(item => item.__2 || item.DeBaigoc || item.question);
-    let htmlNoiDung = `
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="border-b pb-3">
-                <h2 class="text-lg font-bold text-blue-900">🧮 Bài Tập Tính Toán Thực Chiến Ngành Gỗ</h2>
-                <p class="text-xs text-slate-500">計算問題 (Keisan Mondai) - Tổng số: ${danhSachBaiTap.length} bài tập (Đáp án đã ẩn)</p>
-            </div>
-            <div class="space-y-4 max-h-[650px] overflow-y-auto pr-2">
-    `;
-    danhSachBaiTap.forEach((item, index) => {
-        let chude = item[""] || item.ChuDe || "木材の材積と歩止まり計算";
-        let tieude = item.__1 || item.TieuDeBai || `Bài ${index + 1}`;
-        let debaigoc = item.__2 || item.DeBaigoc || item.question || "";
-        let congthuc = item.__3 || item.CongThuc || "";
-        let buocgiai = item.__4 || item.CacBướcGiai || item.GiaiThich || "";
-        let dapan = item.__5 || item.DapAnDung || item.answer || "";
-        htmlNoiDung += `
-            <div class="p-5 bg-gradient-to-r from-blue-50/40 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs bg-orange-100 text-orange-800 px-2.5 py-1 rounded-full font-bold">${chude}</span>
-                    <span class="text-sm font-bold text-blue-900">${tieude}</span>
-                </div>
-                <div class="text-slate-900 font-semibold text-base whitespace-pre-line bg-white p-3 rounded-lg border border-slate-100">
-                    📝 ${debaigoc}
-                </div>
-                <button onclick="toggleAnswer(${index})" id="btn-${index}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
-                    <span>👁️ Xem đáp án & Hướng dẫn giải</span>
-                </button>
-                <div id="ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
-                    ${congthuc ? `<div class="p-3 bg-blue-50 text-blue-900 rounded-lg text-sm border border-blue-100"><strong>📐 Công thức:</strong> ${congthuc}</div>` : ''}
-                    ${buocgiai ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Các bước giải:</strong><br>${buocgiai}</div>` : ''}
-                    ${dapan ? `<div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">✅ Đáp án: ${dapan}</div>` : ''}
-                </div>
-            </div>
-        `;
-    });
-    htmlNoiDung += `</div></div>`;
-    calcTab.innerHTML = htmlNoiDung;
-}
-
-function toggleAnswer(index) {
-    let box = document.getElementById(`ans-${index}`);
-    let btn = document.getElementById(`btn-${index}`);
-    if (box && btn) {
-        if (box.style.display === 'none') {
-            box.style.display = 'block';
-            btn.innerHTML = `<span>🙈 Thu gọn đáp án</span>`;
-            btn.className = "px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
-        } else {
-            box.style.display = 'none';
-            btn.innerHTML = `<span>👁️ Xem đáp án & Hướng dẫn giải</span>`;
-            btn.className = "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
-        }
-    }
-}
-
-function renderQuestion() {
-    if (!questions || questions.length === 0) return;
-    let q = questions[currentIndex];
-    if (q.TuVungJP || q.ID_HinhAnh) { nextQuestion(); return; }
-    let progressEl = document.getElementById('quiz-progress');
-    if (progressEl) progressEl.innerText = `[${q.TrangSo || 'Ôn tập'}] - Câu ${currentIndex + 1} / ${questions.length}`;
-    let questionTextEl = document.getElementById('question-text');
-    if (questionTextEl) {
-        questionTextEl.innerHTML = `
-            <span class="text-blue-700 font-bold text-base">${q.TieuDeCau || q.TieuDe || ""}</span><br>
-            <div class="my-2 text-slate-900 font-semibold text-base whitespace-pre-line">${q.NoiDungJP || q.question || q.DeBaigoc || ""}</div>
-            <div class="text-slate-500 text-sm italic">${q.NoiDungVN || ""}</div>
-        `;
-    }
-    let optsContainer = document.getElementById('options-container');
-    if (optsContainer) {
-        optsContainer.innerHTML = '';
-        let options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
-        if (options.length === 0) options = ["〇", "✖"];
-        options.forEach(opt => {
-            let btn = document.createElement('button');
-            btn.className = "w-full text-left px-5 py-3.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-base font-bold transition cursor-pointer flex items-center justify-between mb-2 shadow-sm";
-            btn.innerText = (opt === "〇") ? "〇 — Đúng" : ((opt === "✖") ? "✖ — Sai" : opt);
-            let dapAnDung = q.DapAn || q.answer || q.DapAnDung;
-            btn.onclick = () => checkAnswer(btn, opt, dapAnDung, q.GiaiThich);
-            optsContainer.appendChild(btn);
-        });
-    }
-    let expBox = document.getElementById('explanation-box');
-    if (expBox) { expBox.classList.add('hidden'); expBox.innerText = ''; }
-}
-
-function checkAnswer(button, selectedOption, correctAnswer, explanation) {
-    let optsContainer = document.getElementById('options-container');
-    if (!optsContainer) return;
-    let buttons = optsContainer.getElementsByTagName('button');
-    for (let b of buttons) {
-        b.disabled = true;
-        if (correctAnswer && b.innerText.trim().includes(String(correctAnswer).trim())) {
-            b.classList.add('bg-green-100', 'border-green-500', 'text-green-900', 'font-bold');
-        }
-    }
-    if (correctAnswer && selectedOption.trim() === String(correctAnswer).trim()) {
-        button.classList.add('bg-green-500', 'text-white', 'border-green-600');
-        score++;
-    } else {
-        button.classList.add('bg-red-100', 'border-red-500', 'text-red-900');
-    }
-    let expBox = document.getElementById('explanation-box');
-    if (expBox && explanation) {
-        expBox.innerText = `💡 Giải thích: ${explanation}`;
-        expBox.classList.remove('hidden');
-    }
-}
-
-function nextQuestion() {
-    if (currentIndex < questions.length - 1) {
-        currentIndex++;
-        renderQuestion();
-    } else {
-        alert(`🎉 Chúc mừng bạn đã hoàn thành! Tổng số câu đúng: ${score} / ${questions.length}`);
-    }
-}
-
-function prevQuestion() {
-    if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
