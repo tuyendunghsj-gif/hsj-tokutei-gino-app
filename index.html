@@ -10,28 +10,28 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- MÀN HÌNH CHÀO MỞ ĐẦU VỚI CHÚ GÀ CAM CỦA CHỊ -->
+    <!-- MÀN HÌNH CHÀO MỞ ĐẦU CHỈ CÓ KHÚC GỖ VÀ LỜI CHÀO -->
     <div id="splash-screen" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-900 via-blue-800 to-orange-600 flex flex-col items-center justify-center text-white px-4 transition-opacity duration-700">
         
-        <!-- Khung tròn chứa chính xác ảnh chú gà cam của chị -->
-        <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl mb-4 bg-white flex items-center justify-center relative shadow-orange-500/50">
-            <img src="CongaTrang.jpg" alt="Chú gà HSJ" class="w-full h-full object-cover" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'150\'><rect width=\'100%\' height=\'100%\' fill=\'%23f97316\'/><text x=\'50%\' y=\'50%\' font-size=\'50\' dominant-baseline=\'middle\' text-anchor=\'middle\'>🐔</text></svg>';">
+        <!-- Biểu tượng khúc gỗ đặc trưng ngành gỗ (Đã bỏ hoàn toàn con gà) -->
+        <div class="text-6xl mb-4 animate-bounce select-none">
+            🪵
         </div>
 
         <!-- Bong bóng lời thoại chào mừng -->
-        <div class="relative bg-white text-slate-900 px-5 py-2.5 rounded-2xl shadow-xl mb-5 max-w-xs text-center border border-orange-200 animate-bounce">
+        <div class="relative bg-white text-slate-900 px-6 py-3 rounded-2xl shadow-xl mb-6 max-w-sm text-center border border-orange-200">
             <div class="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white rotate-45 border-t border-l border-orange-200"></div>
-            <p class="text-xs font-bold text-orange-600">💬 "Chào bạn Phạm Thùy Trang! Cùng cố gắng vượt qua kỳ thi nhé!"</p>
+            <p class="text-xs md:text-sm font-bold text-orange-600">💬 "Chào bạn Phạm Thùy Trang! Cùng cố gắng vượt qua kỳ thi nhé!"</p>
         </div>
 
-        <h1 class="text-2xl font-bold tracking-wide text-center mb-1">HSJ Tokutei Gino Wood</h1>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-wide text-center mb-1">HSJ Tokutei Gino Wood</h1>
         <p class="text-sm text-blue-200 mb-6 text-center">Hệ thống Đào tạo & Ôn thi Ngành Gỗ Chuẩn Nhật</p>
         
-        <div class="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 mb-6 shadow-inner">
+        <div class="bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 mb-8 shadow-inner">
             <p class="text-xs font-medium text-orange-300">✨ PHẠM THÙY TRANG - PRO USER ✨</p>
         </div>
 
-        <button onclick="enterAppWithSound()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition transform active:scale-95 text-base cursor-pointer flex items-center space-x-2">
+        <button onclick="enterAppWithSound()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-base cursor-pointer flex items-center space-x-2">
             <span>🚀 Bắt Đầu Ngay</span>
         </button>
     </div>
@@ -41,7 +41,7 @@
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-xl shadow">
-                    🐔
+                    🪵
                 </div>
                 <div>
                     <h1 class="text-base font-bold tracking-wide">HSJ Tokutei Gino Wood App</h1>
