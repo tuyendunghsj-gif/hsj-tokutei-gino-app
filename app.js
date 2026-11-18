@@ -133,7 +133,6 @@ async function taiRiengFileTinhToan() {
     } catch (e) {}
 }
 
-// Tải chuyên biệt file NhanDangHinhAnh.json
 async function taiRiengFileAnToan() {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -296,7 +295,17 @@ function toggleAnswer(index) {
     }
 }
 
-// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Chọn nhiều đáp án đổi màu Vàng cực chuẩn)
+// Hàm chuyển đổi link Google Drive chuẩn xác sang dạng hiển thị ảnh trực tiếp
+function convertDriveLink(url) {
+    if (!url) return "";
+    let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+    }
+    return url;
+}
+
+// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Hiển thị ảnh nét căng từ link Drive)
 function hienThiNhanDangAnToan(danhSach) {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -325,7 +334,10 @@ function hienThiNhanDangAnToan(danhSach) {
         let deVN = item.DeBaigocVN || "";
         let giaithich = item.GiaiThich || "";
         let dapan = item.DapAnDung || "";
-        let idHinh = item.ID_HinhAnh || `HA_0${index+1}`;
+        
+        // Lấy link hình ảnh từ trường trong JSON (Hỗ trợ nhiều tên trường khác nhau)
+        let rawImgUrl = item.HinhAnhURL || item.LinkAnh || item.Image || "";
+        let imgUrl = convertDriveLink(rawImgUrl);
 
         let luachonList = [
             { text: item.LuaChon_A },
@@ -343,10 +355,12 @@ function hienThiNhanDangAnToan(danhSach) {
                     <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
                 </div>
 
-                <!-- Hiển thị ảnh (Chỉ hiện khi file ảnh tồn tại trên GitHub, nếu chưa có sẽ tự ẩn đi gọn gàng) -->
-                <div class="flex flex-col items-center justify-center bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner">
-                    <img src="./images/${idHinh}.png" alt="Ảnh minh họa ${idHinh}" class="max-h-[260px] object-contain rounded-lg" onerror="this.parentElement.style.display='none';">
-                </div>
+                <!-- Hiển thị Hình ảnh minh họa trực tiếp từ link Drive -->
+                ${imgUrl ? `
+                    <div class="flex flex-col items-center justify-center bg-slate-900 rounded-xl p-3 border border-slate-300 shadow-inner">
+                        <img src="${imgUrl}" alt="Ảnh minh họa an toàn" class="max-h-[320px] object-contain rounded-lg shadow-md" onerror="this.parentElement.style.display='none';">
+                    </div>
+                ` : ''}
 
                 <!-- Nội dung đề bài Nhật & Việt -->
                 <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100 shadow-2xs">
@@ -354,7 +368,7 @@ function hienThiNhanDangAnToan(danhSach) {
                     <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>
                 </div>
 
-                <!-- Danh sách các lựa chọn (Cho phép chọn nhiều đáp án, đổi màu vàng tạm thời) -->
+                <!-- Danh sách các lựa chọn (Chọn nhiều đáp án, đổi màu vàng hổ phách) -->
                 <div class="space-y-2">
                     <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Có thể chọn nhiều đáp án - Đổi sang màu vàng):</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -397,7 +411,6 @@ function hienThiNhanDangAnToan(danhSach) {
 function toggleSafetyOption(element) {
     let mark = element.querySelector('.box-mark');
     if (element.classList.contains('bg-amber-100')) {
-        // Bỏ chọn (Trở về trạng thái trắng ban đầu)
         element.classList.remove('bg-amber-100', 'border-amber-400', 'text-amber-950', 'font-bold');
         element.classList.add('bg-white', 'border-slate-200', 'text-slate-800', 'font-medium');
         if (mark) {
@@ -406,7 +419,6 @@ function toggleSafetyOption(element) {
             mark.innerText = "◯";
         }
     } else {
-        // Chọn (Đổi sang màu vàng ấm áp, bật dấu check)
         element.classList.add('bg-amber-100', 'border-amber-400', 'text-amber-950', 'font-bold');
         element.classList.remove('bg-white', 'border-slate-200', 'text-slate-800', 'font-medium');
         if (mark) {
@@ -506,4 +518,6 @@ function nextQuestion() {
 function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
+
+
 
