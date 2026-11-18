@@ -17,7 +17,6 @@ let questions = [];
 let currentIndex = 0;
 let score = 0;
 
-// Lưu trữ dữ liệu riêng cho 7 file quy trình
 let duLieuQuyTrinhKho = {
     precut: [],
     chip: [],
@@ -42,7 +41,7 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab giao diện
+// Điều hướng Tab giao diện toàn diện
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     
@@ -52,9 +51,14 @@ function switchTab(tabId) {
                     document.getElementById('tab-6') || 
                     document.getElementById(tabId);
 
-    if (!activeTab && (tabId === 'workflow' || tabId === 'quy-trinh' || tabId === '6')) {
+    if (!activeTab) {
         let tabs = document.querySelectorAll('.tab-content');
-        if (tabs[5]) activeTab = tabs[5]; // Tab số 6 (Quy trình)
+        if (tabId === 'vocab' || tabId === '1') activeTab = tabs[0];
+        else if (tabId === 'practice' || tabId === '2') activeTab = tabs[1];
+        else if (tabId === 'exam' || tabId === '3') activeTab = tabs[2];
+        else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4') activeTab = tabs[3];
+        else if (tabId === 'safety' || tabId === 'an-toan' || tabId === '5') activeTab = tabs[4];
+        else if (tabId === 'workflow' || tabId === 'quy-trinh' || tabId === '6') activeTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
     }
                     
     if (activeTab) activeTab.classList.remove('hidden');
@@ -71,11 +75,8 @@ function switchTab(tabId) {
 
     if (tabId === 'vocab') {
         let danhSachTuVung = tatCaDuLieuKho.filter(item => item.TuVungJP || item.ID_TuVung);
-        if (danhSachTuVung.length > 0) {
-            hienThiDanhSachTuVung(danhSachTuVung);
-        } else {
-            taiRiengFileVocab();
-        }
+        if (danhSachTuVung.length > 0) hienThiDanhSachTuVung(danhSachTuVung);
+        else taiRiengFileVocab();
     } else if (tabId === 'calc' || tabId === 'tinh-toan' || tabId === '4' || tabId === 'tinh_toan') {
         taiRiengFileTinhToan();
     } else if (tabId === 'safety' || tabId === 'an-toan' || tabId === '5') {
@@ -102,8 +103,6 @@ async function taiTatCaDuLieu() {
                 let danhSach = Array.isArray(data) ? data : (data.questions || data.data || Object.values(data)[0] || []);
                 if (Array.isArray(danhSach) && danhSach.length > 0) {
                     tongHop = tongHop.concat(danhSach);
-                    
-                    // Phân loại sẵn vào kho quy trình nếu khớp tên file
                     if (tenFile === "GhepNoi_Precut.json") duLieuQuyTrinhKho.precut = danhSach;
                     if (tenFile === "GhepNoi_Chip.json") duLieuQuyTrinhKho.chip = danhSach;
                     if (tenFile === "GhepNoi_Flooring.json") duLieuQuyTrinhKho.flooring = danhSach;
@@ -148,9 +147,7 @@ async function taiRiengFileTinhToan() {
         if (res.ok) {
             let data = await res.json();
             let danhSach = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
-            if (Array.isArray(danhSach) && danhSach.length > 0) {
-                hienThiBaiTapTinhToan(danhSach);
-            }
+            if (Array.isArray(danhSach) && danhSach.length > 0) hienThiBaiTapTinhToan(danhSach);
         }
     } catch (e) {}
 }
@@ -163,21 +160,17 @@ async function taiRiengFileAnToan() {
     }
     if (!safetyTab) return;
 
-    safetyTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải câu hỏi nhận dạng an toàn...</div>`;
-
     try {
         let res = await fetch('./NhanDangHinhAnh.json');
         if (res.ok) {
             let data = await res.json();
             let danhSach = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
-            if (Array.isArray(danhSach) && danhSach.length > 0) {
-                hienThiNhanDangAnToan(danhSach);
-            }
+            if (Array.isArray(danhSach) && danhSach.length > 0) hienThiNhanDangAnToan(danhSach);
         }
     } catch (e) {}
 }
 
-// Tải và hiển thị Tab 6: Quy Trình (Bao gồm 7 file ghép nối)
+// Tải và hiển thị Tab 6: Quy Trình
 async function taiRiengTatCaFileQuyTrinh() {
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
@@ -186,13 +179,12 @@ async function taiRiengTatCaFileQuyTrinh() {
                   
     if (!workflowTab) {
         let tabs = document.querySelectorAll('.tab-content');
-        if (tabs[5]) workflowTab = tabs[5];
+        workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
     }
     if (!workflowTab) return;
 
-    // Kiểm tra nếu chưa tải đủ dữ liệu thì fetch bổ sung
+    // Nếu kho quy trình chưa có dữ liệu, tiến hành fetch 7 file JSON
     if (duLieuQuyTrinhKho.precut.length === 0) {
-        workflowTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải dữ liệu 7 quy trình sản xuất ngành gỗ...</div>`;
         const filesMap = {
             precut: "GhepNoi_Precut.json",
             chip: "GhepNoi_Chip.json",
@@ -207,7 +199,8 @@ async function taiRiengTatCaFileQuyTrinh() {
                 let res = await fetch(`./${filesMap[key]}`);
                 if (res.ok) {
                     let data = await res.json();
-                    duLieuQuyTrinhKho[key] = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
+                    let arr = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
+                    if (Array.isArray(arr)) duLieuQuyTrinhKho[key] = arr;
                 }
             } catch(e) {}
         }
@@ -216,12 +209,16 @@ async function taiRiengTatCaFileQuyTrinh() {
     hienThiGiaoDienQuyTrinh('precut');
 }
 
-// Hiển thị giao diện chung cho 7 quy trình với các nút chọn loại
+// Hiển thị giao diện 7 quy trình với các nút chọn loại
 function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
                       document.getElementById('tab-6') || 
                       document.getElementById('workflow');
+    if (!workflowTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
+    }
     if (!workflowTab) return;
 
     let danhSachHienTai = duLieuQuyTrinhKho[loaiHienTai] || [];
@@ -264,7 +261,7 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     `;
 
     if (danhSachHienTai.length === 0) {
-        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Đang cập nhật dữ liệu cho quy trình này...</div>`;
+        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Đang tải dữ liệu quy trình này...</div>`;
     } else {
         danhSachHienTai.forEach((item, index) => {
             let tieude = item.TieuDeCau || item.TieuDe || item.TieuDeBai || `Bước / Câu ${index + 1}`;
@@ -289,7 +286,6 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
                         <span class="text-sm font-bold text-blue-900">${tieude}</span>
                     </div>
 
-                    <!-- Nội dung câu hỏi / quy trình Nhật & Việt -->
                     <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100">
                         ${deJP ? `<div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${deJP}</div>` : ''}
                         ${deVN ? `<div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>` : ''}
@@ -299,7 +295,7 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
             if (luachonList.length > 0) {
                 htmlNoiDung += `
                     <div class="space-y-2">
-                        <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Chọn nhiều đáp án - Đổi sang màu vàng):</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Có thể chọn nhiều đáp án - Đổi sang màu vàng):</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                 `;
                 luachonList.forEach(opt => {
@@ -314,12 +310,10 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
             }
 
             htmlNoiDung += `
-                    <!-- Nút bấm xem đáp án -->
                     <button onclick="toggleWorkflowAnswer(${index})" id="btn-wf-${index}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
                         <span>👁️ Xem đáp án & Quy trình chuẩn</span>
                     </button>
 
-                    <!-- Khung đáp án ẩn -->
                     <div id="wf-ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
                         ${dapan ? `<div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">✅ Đáp án đúng: ${dapan}</div>` : ''}
                         ${giaithich ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Giải thích chi tiết:</strong><br>${giaithich}</div>` : ''}
@@ -333,7 +327,6 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     workflowTab.innerHTML = htmlNoiDung;
 }
 
-// Hàm bật/tắt hiển thị đáp án phần Quy Trình
 function toggleWorkflowAnswer(index) {
     let box = document.getElementById(`wf-ans-${index}`);
     let btn = document.getElementById(`btn-wf-${index}`);
@@ -350,7 +343,6 @@ function toggleWorkflowAnswer(index) {
     }
 }
 
-// Hàm xử lý tương tác click chọn nhiều đáp án (Màu vàng hổ phách) dùng chung cho an toàn & quy trình
 function toggleSafetyOption(element) {
     let mark = element.querySelector('.box-mark');
     if (element.classList.contains('bg-amber-100')) {
@@ -377,10 +369,7 @@ function parseTuVungJP(jpText) {
     let hiraganaIndex = -1;
     for (let i = 0; i < jpText.length; i++) {
         let code = jpText.charCodeAt(i);
-        if (code >= 0x3040 && code <= 0x309F) {
-            hiraganaIndex = i;
-            break;
-        }
+        if (code >= 0x3040 && code <= 0x309F) { hiraganaIndex = i; break; }
     }
     if (hiraganaIndex > 0) {
         return {
@@ -647,3 +636,8 @@ function prevQuestion() {
 }
 
 
+      
+ 
+ 
+
+  
