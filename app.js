@@ -40,7 +40,6 @@ function enterApp() {
     }
 }
 
-// Hàm chuyển tab thông minh
 function switchTab(rawTabId) {
     let tabId = String(rawTabId || '').toLowerCase().replace('tab-', '');
     console.log("📌 Đang chuyển sang tab:", tabId);
@@ -65,7 +64,7 @@ function switchTab(rawTabId) {
                     
     if (activeTab) {
         activeTab.classList.remove('hidden');
-        console.log("✅ Đã kích hoạt hiển thị tab thành công:", activeTab.id || activeTab.className);
+        console.log("✅ Đã kích hoạt hiển thị tab thành công.");
     }
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -290,11 +289,8 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (BẢN AN TOÀN TUYỆT ĐỐI & CÓ LOG DEBUG) =================
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (CHỈ HIỂN THỊ 1 ẢNH DUY NHẤT CHO MỖI QUY TRÌNH) =================
 async function taiRiengTatCaFileQuyTrinh() {
-    console.log("⚙️ Bắt đầu tải 7 file quy trình sản xuất...");
-    
-    // Tìm chính xác phần tử hiển thị của tab 6 theo mọi ID có thể
     let workflowTab = document.getElementById('process') || 
                       document.getElementById('tab-process') || 
                       document.getElementById('tab-workflow') || 
@@ -306,15 +302,10 @@ async function taiRiengTatCaFileQuyTrinh() {
         let tabs = document.querySelectorAll('.tab-content');
         workflowTab = tabs[5] || tabs[6] || tabs[tabs.length - 1];
     }
-    
-    if (!workflowTab) {
-        console.error("❌ Không tìm thấy khung chứa Tab 6 trong HTML!");
-        return;
-    }
+    if (!workflowTab) return;
 
-    console.log("✅ Đã tìm thấy khung chứa Tab 6:", workflowTab);
+    workflowTab.innerHTML = `<div class="p-6 text-center text-slate-500">⏳ Đang tải dữ liệu quy trình sản xuất...</div>`;
 
-    // Nếu chưa tải dữ liệu, tiến hành fetch đồng loạt
     if (duLieuQuyTrinhKho.precut.length === 0) {
         const filesMap = {
             precut: "GhepNoi_Precut.json",
@@ -328,12 +319,9 @@ async function taiRiengTatCaFileQuyTrinh() {
 
         for (let key in filesMap) {
             try {
-                let url = `./${filesMap[key]}`;
-                console.log(`📥 Đang fetch file: ${url}`);
-                let res = await fetch(url);
+                let res = await fetch(`./${filesMap[key]}`);
                 if (res.ok) {
                     let data = await res.json();
-                    console.log(`✅ Tải thành công ${filesMap[key]}, số dòng:`, data.length);
                     if (Array.isArray(data) && data.length > 1) {
                         let danhSachbuoc = data.slice(1).map((item, idx) => {
                             let values = Object.values(item);
@@ -347,14 +335,9 @@ async function taiRiengTatCaFileQuyTrinh() {
                         }).filter(item => item.tuVungJP);
 
                         duLieuQuyTrinhKho[key] = danhSachbuoc;
-                        console.log(`✨ Đã lọc thành công ${danhSachbuoc.length} bước cho ${key}`);
                     }
-                } else {
-                    console.warn(`⚠️ Không tìm thấy file ${filesMap[key]} (Mã lỗi: ${res.status})`);
                 }
-            } catch(e) {
-                console.error(`❌ Lỗi đọc file ${filesMap[key]}:`, e);
-            }
+            } catch(e) {}
         }
     }
 
@@ -375,7 +358,6 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     if (!workflowTab) return;
 
     let danhSachHienTai = duLieuQuyTrinhKho[loaiHienTai] || [];
-    console.log(`🖥️ Đang vẽ giao diện quy trình [${loaiHienTai}], số bước hiển thị:`, danhSachHienTai.length);
 
     let menuNutBam = [
         { id: 'precut', name: '🏠 Nhà Gỗ Pre-cut' },
@@ -386,6 +368,11 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
         { id: 'tsukita', name: '📃 Ván Lạng (Tsukita)' },
         { id: 'chip', name: '🪵 Dăm Gỗ / Bột Giấy' }
     ];
+
+    // Lấy ảnh đại diện từ bước đầu tiên của quy trình hiện tại
+    let anhDaiDien = (danhSachHienTai.length > 0 && danhSachHienTai[0].hinhAnh) ? danhSachHienTai[0].hinhAnh : "";
+    let embedUrl = convertDriveEmbedLink(anhDaiDien);
+    let directUrl = convertDriveDirectLink(anhDaiDien);
 
     let htmlNoiDung = `
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
@@ -410,47 +397,41 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     htmlNoiDung += `
             </div>
 
-            <!-- Danh sách nội dung quy trình -->
-            <div class="space-y-4 max-h-[620px] overflow-y-auto pr-2">
+            <!-- HIỂN THỊ 1 ẢNH SƠ ĐỒ ĐẠI DIỆN DUY NHẤT Ở ĐẦU QUY TRÌNH -->
+            ${embedUrl ? `
+                <div class="w-full bg-slate-900 rounded-xl p-3 border border-slate-300 shadow-md space-y-2">
+                    <div class="text-xs text-slate-200 font-bold uppercase tracking-wider text-center pb-1">🗺️ Sơ đồ tổng quan quy trình sản xuất</div>
+                    <iframe src="${embedUrl}" class="w-full h-[320px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
+                    <div class="text-center pt-1">
+                        <a href="${directUrl}" target="_blank" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 font-semibold transition">
+                            <span>🔗 Mở sơ đồ lớn trên Google Drive</span>
+                        </a>
+                    </div>
+                </div>
+            ` : ''}
+
+            <!-- DANH SÁCH CÁC BƯỚC / TỪ VỰNG TRONG QUY TRÌNH -->
+            <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
     `;
 
     if (danhSachHienTai.length === 0) {
-        htmlNoiDung += `
-            <div class="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 space-y-2">
-                <p class="text-slate-600 font-semibold">⏳ Đang tải dữ liệu hoặc file JSON chưa sẵn sàng.</p>
-                <p class="text-xs text-slate-400">Hãy nhấn F12 kiểm tra bảng Console xem có file nào bị báo lỗi 404 không chị nhé!</p>
-            </div>
-        `;
+        htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Đang tải dữ liệu quy trình...</div>`;
     } else {
         danhSachHienTai.forEach((item, index) => {
-            let embedUrl = convertDriveEmbedLink(item.hinhAnh);
-            let directUrl = convertDriveDirectLink(item.hinhAnh);
-
             htmlNoiDung += `
-                <div class="p-5 bg-gradient-to-r from-blue-50/20 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
+                <div class="p-4 bg-gradient-to-r from-blue-50/20 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-bold">Bước #${item.stt || (index + 1)}</span>
+                        <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full font-bold">Bước #${item.stt || (index + 1)}</span>
                     </div>
 
-                    ${embedUrl ? `
-                        <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner space-y-2">
-                            <iframe src="${embedUrl}" class="w-full h-[280px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
-                            <div class="text-center pb-1">
-                                <a href="${directUrl}" target="_blank" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 font-semibold transition">
-                                    <span>🔗 Mở ảnh quy trình lớn trên Google Drive</span>
-                                </a>
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100">
+                    <div class="space-y-1 bg-white p-3 rounded-lg border border-slate-100">
                         <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${item.tuVungJP}</div>
-                        <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${item.nghiaVN}</div>
+                        <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-1">🇻🇳 ${item.nghiaVN}</div>
                     </div>
 
                     ${item.giaiThich ? `
-                        <div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200">
-                            <strong>💡 Giải thích chi tiết:</strong><br>${item.giaiThich}
+                        <div class="p-2.5 bg-slate-100 text-slate-800 rounded-lg text-xs whitespace-pre-line border border-slate-200">
+                            <strong>💡 Giải thích chi tiết:</strong> ${item.giaiThich}
                         </div>
                     ` : ''}
                 </div>
