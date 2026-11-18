@@ -103,13 +103,6 @@ async function taiTatCaDuLieu() {
                 let danhSach = Array.isArray(data) ? data : (data.questions || data.data || Object.values(data)[0] || []);
                 if (Array.isArray(danhSach) && danhSach.length > 0) {
                     tongHop = tongHop.concat(danhSach);
-                    if (tenFile === "GhepNoi_Precut.json") duLieuQuyTrinhKho.precut = danhSach;
-                    if (tenFile === "GhepNoi_Chip.json") duLieuQuyTrinhKho.chip = danhSach;
-                    if (tenFile === "GhepNoi_Flooring.json") duLieuQuyTrinhKho.flooring = danhSach;
-                    if (tenFile === "GhepNoi_Tsukita.json") duLieuQuyTrinhKho.tsukita = danhSach;
-                    if (tenFile === "GhepNoi_GoubanLVL.json") duLieuQuyTrinhKho.goubanLVL = danhSach;
-                    if (tenFile === "GhepNoi_Shuuseizai.json") duLieuQuyTrinhKho.shuuseizai = danhSach;
-                    if (tenFile === "GhepNoi_Seizai.json") duLieuQuyTrinhKho.seizai = danhSach;
                 }
             }
         } catch (err) {}
@@ -242,20 +235,17 @@ function hienThiNhanDangAnToan(danhSach) {
                     <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
                 </div>
 
-                <!-- Hiển thị Hình ảnh minh họa chuẩn nhúng iframe Google Drive -->
                 ${embedUrl ? `
                     <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner flex justify-center">
                         <iframe src="${embedUrl}" class="w-full h-[320px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
                     </div>
                 ` : ''}
 
-                <!-- Nội dung đề bài Nhật & Việt -->
                 <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100 shadow-2xs">
                     <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${deJP}</div>
                     <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>
                 </div>
 
-                <!-- Danh sách các lựa chọn (Chọn nhiều đáp án, đổi màu vàng hổ phách) -->
                 <div class="space-y-2">
                     <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Có thể chọn nhiều đáp án - Đổi sang màu vàng):</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -274,12 +264,10 @@ function hienThiNhanDangAnToan(danhSach) {
                     </div>
                 </div>
 
-                <!-- Nút bấm xem giải thích & đáp án -->
                 <button onclick="toggleSafetyAnswer(${index})" id="btn-safe-${index}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
                     <span>👁️ Xem đáp án & Giải thích</span>
                 </button>
 
-                <!-- Khung đáp án ẩn -->
                 <div id="safe-ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
                     <div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">
                         ✅ Đáp án đúng: ${dapan}
@@ -294,7 +282,7 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// Tải và hiển thị Tab 6: Quy Trình
+// ================= TẢI VÀ HIỂN THỊ TAB 6: QUY TRÌNH (KHỚP 100% CẤU TRÚC JSON MỚI) =================
 async function taiRiengTatCaFileQuyTrinh() {
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
@@ -310,20 +298,33 @@ async function taiRiengTatCaFileQuyTrinh() {
     if (duLieuQuyTrinhKho.precut.length === 0) {
         const filesMap = {
             precut: "GhepNoi_Precut.json",
-            chip: "GhepNoi_Chip.json",
+            seizai: "GhepNoi_Seizai.json",
+            shuuseizai: "GhepNoi_Shuuseizai.json",
+            goubanLVL: "GhepNoi_GoubanLVL.json",
             flooring: "GhepNoi_Flooring.json",
             tsukita: "GhepNoi_Tsukita.json",
-            goubanLVL: "GhepNoi_GoubanLVL.json",
-            shuuseizai: "GhepNoi_Shuuseizai.json",
-            seizai: "GhepNoi_Seizai.json"
+            chip: "GhepNoi_Chip.json"
         };
+
         for (let key in filesMap) {
             try {
                 let res = await fetch(`./${filesMap[key]}`);
                 if (res.ok) {
                     let data = await res.json();
-                    let arr = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
-                    if (Array.isArray(arr)) duLieuQuyTrinhKho[key] = arr;
+                    if (Array.isArray(data) && data.length > 1) {
+                        // Lọc bỏ phần tử tiêu đề đầu tiên, lấy từ phần tử thứ 2 trở đi
+                        let danhSachbuoc = data.slice(1).map(item => {
+                            let keys = Object.keys(item);
+                            return {
+                                stt: item[keys[0]] || "",
+                                hinhAnh: item[""] || "",
+                                tuVungJP: item["__1"] || "",
+                                nghiaVN: item["__2"] || "",
+                                giaiThich: item["__3"] || ""
+                            };
+                        });
+                        duLieuQuyTrinhKho[key] = danhSachbuoc;
+                    }
                 }
             } catch(e) {}
         }
@@ -332,7 +333,6 @@ async function taiRiengTatCaFileQuyTrinh() {
     hienThiGiaoDienQuyTrinh('precut');
 }
 
-// Hiển thị giao diện 7 quy trình với các nút chọn loại
 function hienThiGiaoDienQuyTrinh(loaiHienTai) {
     let workflowTab = document.getElementById('tab-workflow') || 
                       document.getElementById('tab-quy-trinh') || 
@@ -387,60 +387,31 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
         htmlNoiDung += `<div class="p-6 text-center text-slate-400">⏳ Đang tải dữ liệu quy trình này...</div>`;
     } else {
         danhSachHienTai.forEach((item, index) => {
-            let tieude = item.TieuDeCau || item.TieuDe || item.TieuDeBai || `Bước / Câu ${index + 1}`;
-            let deJP = item.DeBaigocJP || item.NoiDungJP || item.question || "";
-            let deVN = item.DeBaigocVN || item.NoiDungVN || "";
-            let dapan = item.DapAnDung || item.DapAn || item.answer || "";
-            let giaithich = item.GiaiThich || item.GiaiThichChiTiet || "";
-
-            let luachonList = [
-                { text: item.LuaChon_A },
-                { text: item.LuaChon_I },
-                { text: item.LuaChon_U },
-                { text: item.LuaChon_E },
-                { text: item.LuaChon_O },
-                { text: item.LuaChon_Ka }
-            ].filter(opt => opt.text);
+            let embedUrl = convertDriveEmbedLink(item.hinhAnh);
 
             htmlNoiDung += `
                 <div class="p-5 bg-gradient-to-r from-blue-50/20 to-slate-50 border border-slate-200 rounded-xl shadow-sm space-y-3">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-bold">Quy trình #${index + 1}</span>
-                        <span class="text-sm font-bold text-blue-900">${tieude}</span>
+                        <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-bold">Bước #${item.stt || (index + 1)}</span>
                     </div>
+
+                    <!-- Hiển thị hình ảnh quy trình qua iframe Google Drive -->
+                    ${embedUrl ? `
+                        <div class="w-full bg-slate-900 rounded-xl p-2 border border-slate-300 shadow-inner flex justify-center">
+                            <iframe src="${embedUrl}" class="w-full h-[280px] rounded-lg border-0" allow="autoplay" loading="lazy"></iframe>
+                        </div>
+                    ` : ''}
 
                     <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100">
-                        ${deJP ? `<div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${deJP}</div>` : ''}
-                        ${deVN ? `<div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${deVN}</div>` : ''}
+                        <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${item.tuVungJP}</div>
+                        <div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${item.nghiaVN}</div>
                     </div>
-            `;
 
-            if (luachonList.length > 0) {
-                htmlNoiDung += `
-                    <div class="space-y-2">
-                        <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn phương án (Có thể chọn nhiều đáp án - Đổi sang màu vàng):</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                `;
-                luachonList.forEach(opt => {
-                    htmlNoiDung += `
-                        <div onclick="toggleSafetyOption(this)" class="p-3 bg-white hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-xl text-sm text-slate-800 font-medium transition shadow-2xs cursor-pointer flex items-center space-x-3 select-none">
-                            <div class="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-600 font-bold text-xs shrink-0 box-mark border border-slate-300">◯</div>
-                            <span>${opt.text}</span>
+                    ${item.giaiThich ? `
+                        <div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200">
+                            <strong>💡 Giải thích chi tiết:</strong><br>${item.giaiThich}
                         </div>
-                    `;
-                });
-                htmlNoiDung += `</div></div>`;
-            }
-
-            htmlNoiDung += `
-                    <button onclick="toggleWorkflowAnswer(${index})" id="btn-wf-${index}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2">
-                        <span>👁️ Xem đáp án & Quy trình chuẩn</span>
-                    </button>
-
-                    <div id="wf-ans-${index}" style="display: none;" class="space-y-3 pt-3 border-t border-slate-200">
-                        ${dapan ? `<div class="p-3 bg-green-50 text-green-900 rounded-lg text-sm font-bold border border-green-200">✅ Đáp án đúng: ${dapan}</div>` : ''}
-                        ${giaithich ? `<div class="p-3 bg-slate-100 text-slate-800 rounded-lg text-sm whitespace-pre-line border border-slate-200"><strong>💡 Giải thích chi tiết:</strong><br>${giaithich}</div>` : ''}
-                    </div>
+                    ` : ''}
                 </div>
             `;
         });
@@ -448,22 +419,6 @@ function hienThiGiaoDienQuyTrinh(loaiHienTai) {
 
     htmlNoiDung += `</div></div>`;
     workflowTab.innerHTML = htmlNoiDung;
-}
-
-function toggleWorkflowAnswer(index) {
-    let box = document.getElementById(`wf-ans-${index}`);
-    let btn = document.getElementById(`btn-wf-${index}`);
-    if (box && btn) {
-        if (box.style.display === 'none') {
-            box.style.display = 'block';
-            btn.innerHTML = `<span>🙈 Thu gọn đáp án</span>`;
-            btn.className = "px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
-        } else {
-            box.style.display = 'none';
-            btn.innerHTML = `<span>👁️ Xem đáp án & Quy trình chuẩn</span>`;
-            btn.className = "px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition shadow-sm cursor-pointer flex items-center space-x-2";
-        }
-    }
 }
 
 // Hàm xử lý tương tác click chọn nhiều đáp án (Màu vàng hổ phách)
