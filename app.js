@@ -295,7 +295,7 @@ function toggleAnswer(index) {
     }
 }
 
-// Hàm chuyển đổi link Google Drive chuẩn xác sang dạng hiển thị ảnh trực tiếp
+// Hàm chuẩn hóa link Google Drive sang định dạng hiển thị ảnh trực tiếp (Direct Link)
 function convertDriveLink(url) {
     if (!url) return "";
     let match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
@@ -305,7 +305,7 @@ function convertDriveLink(url) {
     return url;
 }
 
-// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Hiển thị ảnh nét căng từ link Drive)
+// Hiển thị Tab 5: Nhận Dạng Hình Ảnh & An Toàn Lao Động (Hiển thị ảnh nét căng từ link Drive & chọn nhiều đáp án màu vàng)
 function hienThiNhanDangAnToan(danhSach) {
     let safetyTab = document.getElementById('tab-safety') || 
                     document.getElementById('tab-an-toan') || 
@@ -335,7 +335,6 @@ function hienThiNhanDangAnToan(danhSach) {
         let giaithich = item.GiaiThich || "";
         let dapan = item.DapAnDung || "";
         
-        // Lấy link hình ảnh từ trường trong JSON (Hỗ trợ nhiều tên trường khác nhau)
         let rawImgUrl = item.HinhAnhURL || item.LinkAnh || item.Image || "";
         let imgUrl = convertDriveLink(rawImgUrl);
 
@@ -355,10 +354,10 @@ function hienThiNhanDangAnToan(danhSach) {
                     <span class="text-sm font-bold text-blue-900">Câu ${index + 1}: ${tieude}</span>
                 </div>
 
-                <!-- Hiển thị Hình ảnh minh họa trực tiếp từ link Drive -->
+                <!-- Hiển thị Hình ảnh minh họa trực tiếp từ link Google Drive -->
                 ${imgUrl ? `
                     <div class="flex flex-col items-center justify-center bg-slate-900 rounded-xl p-3 border border-slate-300 shadow-inner">
-                        <img src="${imgUrl}" alt="Ảnh minh họa an toàn" class="max-h-[320px] object-contain rounded-lg shadow-md" onerror="this.parentElement.style.display='none';">
+                        <img src="${imgUrl}" alt="Ảnh minh họa an toàn ${index + 1}" class="max-h-[320px] object-contain rounded-lg shadow-md" onerror="this.parentElement.style.display='none';">
                     </div>
                 ` : ''}
 
@@ -518,6 +517,4 @@ function nextQuestion() {
 function prevQuestion() {
     if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
-
-
-
+      
