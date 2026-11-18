@@ -1,4 +1,4 @@
-// ================= HỆ THỐNG ĐỌC ĐA CẤU TRÚC JSON - HSJ WOOD APP =================
+// ================= HỆ THỐNG ĐỌC TỪ VỰNG KÈM PHÁT ÂM THANH (TEXT-TO-SPEECH) =================
 const danhSachFileJson = [
     "CauHoi_1860.json",
     "TuVung.json",
@@ -13,8 +13,8 @@ const danhSachFileJson = [
     "GhepNoi_Seizai.json"
 ];
 
-let tatCaDuLieuKho = []; // Kho chứa toàn bộ dữ liệu
-let questions = [];      // Dữ liệu đang dùng để luyện tập
+let tatCaDuLieuKho = [];
+let questions = [];
 let currentIndex = 0;
 let score = 0;
 
@@ -32,7 +32,7 @@ function enterApp() {
     }
 }
 
-// Điều hướng Tab giao diện (Hỗ trợ lọc dữ liệu riêng cho từng Tab)
+// Điều hướng Tab giao diện
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     const activeTab = document.getElementById('tab-' + tabId);
@@ -48,17 +48,14 @@ function switchTab(tabId) {
         event.currentTarget.classList.add('bg-blue-50', 'text-blue-800', 'font-bold');
     }
 
-    // Nếu bấm sang tab Từ Vựng, tự động lọc dữ liệu từ vựng để hiển thị
     if (tabId === 'vocab') {
         let danhSachTuVung = tatCaDuLieuKho.filter(item => item.TuVungJP || item.ID_TuVung);
         if (danhSachTuVung.length > 0) {
             hienThiDanhSachTuVung(danhSachTuVung);
         } else {
-            // Nếu chưa tìm thấy trong kho tổng, thử tải riêng file TuVung.json
             taiRiengFileVocab();
         }
     } else if (tabId === 'practice' || tabId === 'exam') {
-        // Mặc định cho phần luyện tập
         questions = tatCaDuLieuKho.filter(item => item.NoiDungJP || item.question || item.DeBaigoc);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
@@ -68,7 +65,7 @@ function switchTab(tabId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Hàm tải toàn bộ danh sách 11 file JSON
+// Tải toàn bộ dữ liệu 11 file JSON
 async function taiTatCaDuLieu() {
     const questionTextEl = document.getElementById('question-text');
     if (questionTextEl) questionTextEl.innerText = "⏳ Đang kết nối tới kho dữ liệu GitHub...";
@@ -94,20 +91,13 @@ async function taiTatCaDuLieu() {
 
     if (tongHop.length > 0) {
         tatCaDuLieuKho = tongHop;
-        // Mặc định đưa câu hỏi vào bảng luyện tập
         questions = tatCaDuLieuKho.filter(item => item.NoiDungJP || item.question || item.DeBaigoc);
         if (questions.length === 0) questions = tatCaDuLieuKho;
         currentIndex = 0;
         renderQuestion();
-        console.log(`🎉 Tổng số nội dung đã nạp vào app: ${tatCaDuLieuKho.length} mục.`);
-    } else {
-        if (questionTextEl) {
-            questionTextEl.innerText = "⚠️ Không tìm thấy dữ liệu trong các file JSON. Kiểm tra lại tên file trên GitHub nhé!";
-        }
     }
 }
 
-// Tải riêng file Từ Vựng nếu cần
 async function taiRiengFileVocab() {
     try {
         let res = await fetch('./TuVung.json');
@@ -122,7 +112,22 @@ async function taiRiengFileVocab() {
     }
 }
 
-// Hiển thị giao diện danh sách Từ Vựng (Tab 1)
+// Hàm phát âm thanh từ vựng tiếng Nhật (Text-to-Speech)
+function phatAmThanh(text) {
+    if ('speechSynthesis' in window) {
+        // Hủy các lệnh phát âm cũ đang chạy dở để đọc ngay lập tức
+        window.speechSynthesis.cancel();
+        
+        let utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ja-JP'; // Đặt chuẩn ngôn ngữ tiếng Nhật
+        utterance.rate = 0.9;     // Tốc độ đọc vừa phải, rõ ràng cho người học
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert("Trình duyệt của bạn không hỗ trợ tính năng phát âm thanh.");
+    }
+}
+
+// Hiển thị danh sách Từ Vựng kèm Nút Loa
 function hienThiDanhSachTuVung(danhSach) {
     const vocabTab = document.getElementById('tab-vocab');
     if (!vocabTab) return;
@@ -131,24 +136,33 @@ function hienThiDanhSachTuVung(danhSach) {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex justify-between items-center border-b pb-3">
                 <div>
-                    <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ</h2>
+                    <h2 class="text-lg font-bold text-blue-900">📖 Từ Vựng Chuyên Ngành Gỗ (Có Âm Thanh)</h2>
                     <p class="text-xs text-slate-500">専門用語 (Senmon Yougo) - Tổng số: ${danhSach.length} từ</p>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-2">
     `;
 
-    danhSach.forEach(item => {
+    danhSach.forEach((item, index) => {
         let jp = item.TuVungJP || "";
         let furi = item.Furigana ? `(${item.Furigana})` : "";
         let vn = item.NghiaVN || "";
         let trang = item.TrangSo ? `Trang ${item.TrangSo}` : "";
 
+        // Mã hóa chuỗi tiếng Nhật an toàn để đưa vào hàm onclick
+        let jpClean = jp.replace(/'/g, "\\'");
+
         htmlNoiDung += `
             <div class="p-4 bg-slate-50 hover:bg-blue-50/50 border border-slate-200 rounded-xl transition flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-start">
-                        <span class="text-base font-bold text-blue-900">${jp}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-base font-bold text-blue-900">${jp}</span>
+                            <!-- Nút Loa phát âm thanh -->
+                            <button onclick="phatAmThanh('${jpClean}')" class="p-1.5 bg-blue-100 hover:bg-orange-500 text-blue-800 hover:text-white rounded-full transition shadow-sm cursor-pointer" title="Nghe phát âm">
+                                🔊
+                            </button>
+                        </div>
                         <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">${trang}</span>
                     </div>
                     <p class="text-xs text-orange-600 font-medium mt-0.5">${furi}</p>
@@ -164,12 +178,11 @@ function hienThiDanhSachTuVung(danhSach) {
     vocabTab.innerHTML = htmlNoiDung;
 }
 
-// Hiển thị nội dung câu hỏi trắc nghiệm (Tab Luyện Tập / Thi Thử)
+// Hiển thị nội dung câu hỏi trắc nghiệm
 function renderQuestion() {
     if (!questions || questions.length === 0) return;
     
     let q = questions[currentIndex];
-    // Nếu vô tình trúng item từ vựng, tự động bỏ qua tìm câu hỏi tiếp theo
     if (q.TuVungJP && !q.NoiDungJP && !q.question) {
         nextQuestion();
         return;
@@ -207,7 +220,7 @@ function renderQuestion() {
             btn.className = "w-full text-left px-5 py-3.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-base font-bold transition cursor-pointer flex items-center justify-between mb-2 shadow-sm";
             
             let nhanHienThi = opt;
-            if (opt === "〇") nhanHienThi = "〇 — Đúng (Đúng thực tế giáo trình)";
+            if (opt === "〇") nhanHienThi = "〇 — Đúng";
             if (opt === "✖") nhanHienThi = "✖ — Sai";
             btn.innerText = nhanHienThi;
             
@@ -258,7 +271,7 @@ function nextQuestion() {
         currentIndex++;
         renderQuestion();
     } else {
-        alert(`🎉 Chúc mừng bạn đã hoàn thành bài ôn tập! Tổng số câu đúng: ${score} / ${questions.length}`);
+        alert(`🎉 Chúc mừng bạn đã hoàn thành! Tổng số câu đúng: ${score} / ${questions.length}`);
     }
 }
 
