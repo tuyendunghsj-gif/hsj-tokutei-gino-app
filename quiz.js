@@ -1,5 +1,5 @@
 // =========================================================================
-// HỆ THỐNG ĐỌC 11 FILE DỮ LIỆU & HIỂN THỊ TRẮC NGHIỆM - HSJ WOOD APP
+// HỆ THỐNG ĐỌC 11 FILE DỮ LIỆU & HIỂN THỊ TRẮC NGHIỆM - HSJ_WOOD
 // =========================================================================
 
 const danhSachFileJson = [
