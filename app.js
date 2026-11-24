@@ -23,6 +23,7 @@ let examCurrentIndex = 0;
 let examUserAnswers = {};
 let examTimer = null;
 let examTimeRemaining = 3600; // 60 phút = 3600 giây
+let currentExamLabel = "Bộ đề thi thử";
 
 let duLieuQuyTrinhKho = {
     precut: [],
@@ -372,6 +373,27 @@ function hienThiManHinhChuanBiThiThu() {
     examTab.innerHTML = htmlNoiDung;
 }
 
+function khoiDongDongHoThiThu() {
+    if (examTimer) clearInterval(examTimer);
+    examTimer = setInterval(() => {
+        examTimeRemaining--;
+        let timerEl = document.getElementById('exam-timer-display');
+        if (timerEl) {
+            let mins = Math.floor(examTimeRemaining / 60);
+            let secs = examTimeRemaining % 60;
+            timerEl.innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            if (examTimeRemaining <= 300) {
+                timerEl.className = "text-sm font-bold px-3 py-1 bg-red-600 text-white rounded-lg animate-pulse";
+            }
+        }
+        if (examTimeRemaining <= 0) {
+            clearInterval(examTimer);
+            alert("⏰ Đã hết thời gian làm bài thi!");
+            nopBaiThiThu();
+        }
+    }, 1000);
+}
+
 async function batDauThiThu(deSo) {
     let examTab = document.getElementById('tab-exam') || document.getElementById('exam') || document.getElementById('tab-3');
     if (!examTab) {
@@ -392,7 +414,11 @@ async function batDauThiThu(deSo) {
         }
     } catch (e) {}
     if (ds1860.length === 0) ds1860 = tatCaDuLieuKho;
-    let shuffled1860 = [...ds1860].sort(() => Math.random() - 0.5).slice(0, 32);
+    let shuffled1860 = [...ds1860].sort(() => Math.random() - 0.5).slice(0, 32).map(q => ({
+        ...q,
+        _loaiCau: '1860',
+        _dapAnChuan: q.DapAn || q.answer || q.DapAnDung || ""
+    }));
 
     // 2. Lấy 1 câu từ NhanDangHinhAnh.json (Câu 33)
     let dsAnToan = [];
@@ -403,7 +429,12 @@ async function batDauThiThu(deSo) {
             dsAnToan = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
         }
     } catch (e) {}
-    let cauAnToan = dsAnToan.length > 0 ? dsAnToan[Math.floor(Math.random() * dsAnToan.length)] : shuffled1860[0];
+    let rawAnToan = dsAnToan.length > 0 ? dsAnToan[Math.floor(Math.random() * dsAnToan.length)] : shuffled1860[0];
+    let cauAnToan = {
+        ...rawAnToan,
+        _loaiCau: 'antoan',
+        _dapAnChuan: rawAnToan.DapAn || rawAnToan.answer || rawAnToan.DapAnDung || ""
+    };
 
     // 3. Lấy 1 câu từ BaiTapTinhToan.json (Câu 34)
     let dsTinhToan = [];
@@ -411,10 +442,18 @@ async function batDauThiThu(deSo) {
         let res = await fetch('./BaiTapTinhToan.json');
         if (res.ok) {
             let data = await res.json();
-            dsTinhToan = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
+            let arr = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
+            dsTinhToan = arr.filter(item => item.__2 || item.DeBaigoc || item.question);
         }
     } catch (e) {}
-    let cauTinhToan = dsTinhToan.length > 0 ? dsTinhToan[Math.floor(Math.random() * dsTinhToan.length)] : shuffled1860[1];
+    let rawTinhToan = dsTinhToan.length > 0 ? dsTinhToan[Math.floor(Math.random() * dsTinhToan.length)] : shuffled1860[1];
+    let dapAnTinhToan = rawTinhToan.__5 || rawTinhToan.DapAnDung || rawTinhToan.answer || rawTinhToan.DapAn || "";
+    let cauTinhToan = {
+        ...rawTinhToan,
+        _loaiCau: 'tinhtoan',
+        _dapAnChuan: dapAnTinhToan,
+        _dapAnPhu: dapAnTinhToan ? dapAnTinhToan : "Đáp án khác A"
+    };
 
     // 4. Lấy 1 câu từ 1 trong 7 file Quy Trình (Câu 35)
     let fileQuyTrinhList = [
@@ -435,81 +474,67 @@ async function batDauThiThu(deSo) {
             if (Array.isArray(data) && data.length > 1) {
                 dsQuyTrinhItem = data.slice(1).map((item, idx) => {
                     let values = Object.values(item);
+                    let buocSo = values[0] || (idx + 1);
                     return {
-                        stt: values[0] || (idx + 1),
+                        stt: buocSo,
                         hinhAnh: values[1] || "",
                         tuVungJP: values[2] || "",
                         nghiaVN: values[3] || "",
-                        giaiThich: values[4] || ""
+                        giaiThich: values[4] || "",
+                        _loaiCau: 'quytrinh',
+                        _dapAnChuan: `Đúng quy trình bước #${buocSo}`
                     };
                 }).filter(item => item.tuVungJP);
             }
         }
     } catch (e) {}
-    let cauQuyTrinh = dsQuyTrinhItem.length > 0 ? dsQuyTrinhItem[Math.floor(Math.random() * dsQuyTrinhItem.length)] : shuffled1860[2];
+    let cauQuyTrinh = dsQuyTrinhItem.length > 0
+        ? dsQuyTrinhItem[Math.floor(Math.random() * dsQuyTrinhItem.length)]
+        : {
+            ...shuffled1860[2],
+            _loaiCau: 'quytrinh',
+            _dapAnChuan: shuffled1860[2]._dapAnChuan
+        };
 
     // Tổng hợp đủ 35 câu cho bộ đề
     examQuestions = [...shuffled1860, cauAnToan, cauTinhToan, cauQuyTrinh];
     examCurrentIndex = 0;
     examUserAnswers = {};
     examTimeRemaining = 3600; // 60 phút
+    currentExamLabel = `Bộ đề số ${deSo}`;
 
-    // Bắt đầu đếm giờ
-    if (examTimer) clearInterval(examTimer);
-    examTimer = setInterval(() => {
-        examTimeRemaining--;
-        let timerEl = document.getElementById('exam-timer-display');
-        if (timerEl) {
-            let mins = Math.floor(examTimeRemaining / 60);
-            let secs = examTimeRemaining % 60;
-            timerEl.innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            if (examTimeRemaining <= 300) {
-                timerEl.className = "text-sm font-bold px-3 py-1 bg-red-600 text-white rounded-lg animate-pulse";
-            }
-        }
-        if (examTimeRemaining <= 0) {
-            clearInterval(examTimer);
-            alert("⏰ Đã hết thời gian làm bài thi!");
-            nopBaiThiThu();
-        }
-    }, 1000);
-
-    renderGiaoDienLamBaiThi(deSo);
+    khoiDongDongHoThiThu();
+    renderGiaoDienLamBaiThi();
 }
 
-function renderGiaoDienLamBaiThi(deSo) {
-    let examTab = document.getElementById('tab-exam') || document.getElementById('exam') || document.getElementById('tab-3');
-    if (!examTab) return;
-
-    let q = examQuestions[examCurrentIndex];
-    let totalQ = examQuestions.length;
-
-    // Phân loại nguồn câu hỏi để bóc tách chính xác tên trường dữ liệu
+function layThongTinHienThiCauThi(q, idx) {
     let tieudeCau = "";
     let noidungJP = "";
     let noidungVN = "";
     let rawImgUrl = "";
     let options = [];
 
-    if (examCurrentIndex === 32) {
-        // CÂU 33: An toàn / Nhận dạng hình ảnh (NhanDangHinhAnh.json)
+    if (q._loaiCau === 'antoan' || idx === 32 && q.DeBaigocJP) {
         tieudeCau = q.TieuDeCau || "🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Nguy Cơ";
         noidungJP = q.DeBaigocJP || q.NoiDungJP || "";
         noidungVN = q.DeBaigocVN || q.NoiDungVN || "";
         rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
         options = [q.LuaChon_A, q.LuaChon_I, q.LuaChon_U, q.LuaChon_E, q.LuaChon_O, q.LuaChon_Ka].filter(Boolean);
-    } else if (examCurrentIndex === 33) {
-        // CÂU 34: Bài tập tính toán (BaiTapTinhToan.json)
+    } else if (q._loaiCau === 'tinhtoan' || (q.__2 && !q.NoiDungJP)) {
         tieudeCau = q.__1 || q.TieuDeBai || "🧮 Bài Tập Tính Toán Thực Chiến Ngành Gỗ";
         noidungJP = q.__2 || q.DeBaigoc || q.question || "";
         noidungVN = q.__4 || q.CacBướcGiai || q.GiaiThich || "";
         rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
         options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
-        if (options.length === 0 && q.__5) {
-            options = [q.__5, "Đáp án khác A", "Đáp án khác B", "Đáp án khác C"];
+        if (options.length === 0 && q._dapAnChuan) {
+            options = [
+                String(q._dapAnChuan),
+                "Đáp án A (Cần kiểm tra lại)",
+                "Đáp án B (Cần kiểm tra lại)",
+                "Đáp án C (Cần kiểm tra lại)"
+            ];
         }
-    } else if (examCurrentIndex === 34) {
-        // CÂU 35: Quy trình sản xuất (GhepNoi_*.json)
+    } else if (q._loaiCau === 'quytrinh' || q.tuVungJP) {
         tieudeCau = "⚙️ Câu hỏi Quy trình sản xuất & Ghép nối";
         noidungJP = q.tuVungJP || "";
         noidungVN = q.nghiaVN || "";
@@ -519,8 +544,7 @@ function renderGiaoDienLamBaiThi(deSo) {
             "Sai thứ tự quy trình sản xuất"
         ];
     } else {
-        // CÂU 1 - 32: Kho 1860 câu
-        tieudeCau = q.TieuDeCau || q.TieuDe || `Câu ${examCurrentIndex + 1}`;
+        tieudeCau = q.TieuDeCau || q.TieuDe || `Câu ${idx + 1}`;
         noidungJP = q.NoiDungJP || q.question || q.DeBaigoc || "";
         noidungVN = q.NoiDungVN || "";
         rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
@@ -531,20 +555,37 @@ function renderGiaoDienLamBaiThi(deSo) {
         options = ["〇 (Đúng)", "✖ (Sai)"];
     }
 
+    return { tieudeCau, noidungJP, noidungVN, rawImgUrl, options };
+}
+
+function renderGiaoDienLamBaiThi() {
+    let examTab = document.getElementById('tab-exam') || document.getElementById('exam') || document.getElementById('tab-3');
+    if (!examTab) return;
+
+    let q = examQuestions[examCurrentIndex];
+    if (!q) return;
+
+    let totalQ = examQuestions.length;
+    let { tieudeCau, noidungJP, noidungVN, rawImgUrl, options } = layThongTinHienThiCauThi(q, examCurrentIndex);
+
     let embedUrl = convertDriveEmbedLink(rawImgUrl);
     let directUrl = convertDriveDirectLink(rawImgUrl);
     let selectedOpt = examUserAnswers[examCurrentIndex] || "";
+
+    let mins = Math.floor(examTimeRemaining / 60);
+    let secs = examTimeRemaining % 60;
+    let formattedTime = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
 
     let htmlNoiDung = `
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5 max-w-4xl mx-auto">
             <div class="flex justify-between items-center border-b pb-3 flex-wrap gap-2">
                 <div>
-                    <h2 class="text-base font-bold text-blue-900">📝 Đang thi thử: Bộ đề số ${deSo}</h2>
+                    <h2 class="text-base font-bold text-blue-900">📝 Đang làm: ${currentExamLabel}</h2>
                     <p class="text-xs text-slate-500">Câu hỏi ${examCurrentIndex + 1} / ${totalQ}</p>
                 </div>
                 <div class="flex items-center space-x-3">
                     <div class="text-xs text-slate-600 font-bold">⏱️ Thời gian còn lại:</div>
-                    <div id="exam-timer-display" class="text-sm font-bold px-3 py-1 bg-amber-600 text-white rounded-lg shadow-xs">60:00</div>
+                    <div id="exam-timer-display" class="text-sm font-bold px-3 py-1 ${examTimeRemaining <= 300 ? 'bg-red-600 animate-pulse' : 'bg-amber-600'} text-white rounded-lg shadow-xs">${formattedTime}</div>
                     <button onclick="xacNhanNopBai()" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition cursor-pointer">
                         🏁 Nộp bài
                     </button>
@@ -578,18 +619,22 @@ function renderGiaoDienLamBaiThi(deSo) {
                     <div class="grid grid-cols-1 gap-2">
     `;
 
-    options.forEach(opt => {
+    options.forEach((opt, optIdx) => {
         let optText = typeof opt === 'object' ? (opt.text || JSON.stringify(opt)) : String(opt);
-        let isChecked = selectedOpt === optText ? "bg-blue-100 border-blue-500 text-blue-950 font-bold shadow-xs" : "bg-white hover:bg-slate-100 border-slate-200 text-slate-800 font-medium";
+        let isChecked = selectedOpt === optText;
+        let checkedClass = isChecked ? "bg-blue-100 border-blue-500 text-blue-950 font-bold shadow-xs" : "bg-white hover:bg-slate-100 border-slate-200 text-slate-800 font-medium";
         htmlNoiDung += `
-            <div onclick="chonDapAnThiThu(${JSON.stringify(optText).replace(/"/g, '&quot;')})" class="p-3.5 border rounded-xl text-sm transition cursor-pointer flex items-center space-x-3 select-none ${isChecked}">
+            <div onclick="chonDapAnThiThu(${optIdx})" class="p-3.5 border rounded-xl text-sm transition cursor-pointer flex items-center space-x-3 select-none ${checkedClass}">
                 <div class="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-700 font-bold text-xs shrink-0 border">
-                    ${selectedOpt === optText ? '✓' : '◯'}
+                    ${isChecked ? '✓' : '◯'}
                 </div>
                 <span>${optText}</span>
             </div>
         `;
     });
+
+    // Lưu tạm danh sách lựa chọn của câu hiện tại để bấm chọn không bị lỗi ký tự đặc biệt
+    window._currentExamOptions = options.map(opt => typeof opt === 'object' ? (opt.text || JSON.stringify(opt)) : String(opt));
 
     htmlNoiDung += `
                     </div>
@@ -625,27 +670,29 @@ function renderGiaoDienLamBaiThi(deSo) {
     examTab.innerHTML = htmlNoiDung;
 }
 
-function chonDapAnThiThu(optionText) {
-    examUserAnswers[examCurrentIndex] = optionText;
-    renderGiaoDienLamBaiThi(1);
+function chonDapAnThiThu(optIdx) {
+    if (window._currentExamOptions && window._currentExamOptions[optIdx] !== undefined) {
+        examUserAnswers[examCurrentIndex] = window._currentExamOptions[optIdx];
+        renderGiaoDienLamBaiThi();
+    }
 }
 
 function chuyenCauThiThu(index) {
     examCurrentIndex = index;
-    renderGiaoDienLamBaiThi(1);
+    renderGiaoDienLamBaiThi();
 }
 
 function cauTruocThiThu() {
     if (examCurrentIndex > 0) {
         examCurrentIndex--;
-        renderGiaoDienLamBaiThi(1);
+        renderGiaoDienLamBaiThi();
     }
 }
 
 function cauSauThiThu() {
     if (examCurrentIndex < examQuestions.length - 1) {
         examCurrentIndex++;
-        renderGiaoDienLamBaiThi(1);
+        renderGiaoDienLamBaiThi();
     }
 }
 
@@ -658,20 +705,68 @@ function xacNhanNopBai() {
     }
 }
 
+function chuanHoaDapAn(str) {
+    if (!str) return "";
+    let s = String(str).trim();
+    // Chuẩn hóa các ký tự đúng/sai phổ biến
+    if (/^(〇|◯|○|o|true|đúng)/i.test(s) && s.length <= 12 && !s.includes("Sai")) {
+        return "DUNG";
+    }
+    if (/^(✖|✕|×|x|false|sai)/i.test(s) && s.length <= 12) {
+        return "SAI";
+    }
+    return s.toLowerCase().replace(/\s+/g, " ");
+}
+
+function kiemTraCauTraLoiDung(userAns, q) {
+    if (!userAns) return false;
+    let correctAns = q._dapAnChuan || q.DapAn || q.answer || q.DapAnDung || "";
+    if (!correctAns) return false;
+
+    let uNorm = chuanHoaDapAn(userAns);
+    let cNorm = chuanHoaDapAn(correctAns);
+
+    if (uNorm === cNorm) return true;
+
+    let uRaw = String(userAns).trim().toLowerCase();
+    let cRaw = String(correctAns).trim().toLowerCase();
+
+    if (uRaw === cRaw) return true;
+
+    // Nếu đáp án đúng là ký tự ngắn như "a", "b", "c", "d", "ア", "イ", "ウ", "エ"
+    if (cRaw.length <= 2) {
+        return uRaw === cRaw || uRaw.startsWith(cRaw + ".") || uRaw.startsWith(cRaw + ")") || uRaw.startsWith(cRaw + " ") || uRaw.startsWith(cRaw + ":");
+    }
+
+    return uRaw.includes(cRaw) || cRaw.includes(uRaw);
+}
+
 function nopBaiThiThu() {
     if (examTimer) clearInterval(examTimer);
 
     let soCauDung = 0;
+    let danhSachCauSai = [];
+
     examQuestions.forEach((q, index) => {
         let userAns = examUserAnswers[index] || "";
-        let correctAns = q.DapAn || q.answer || q.DapAnDung || "";
-        if (userAns && correctAns && userAns.trim().includes(String(correctAns).trim())) {
+        let isDung = kiemTraCauTraLoiDung(userAns, q);
+        if (isDung) {
             soCauDung++;
+        } else {
+            danhSachCauSai.push({
+                index: index,
+                question: q,
+                userAns: userAns
+            });
         }
     });
 
+    // Lưu danh sách câu sai vào biến toàn cục để nút "Làm lại câu sai" sử dụng
+    window._wrongExamQuestions = danhSachCauSai.map(item => item.question);
+
     let totalQ = examQuestions.length;
-    let phanTram = Math.round((soCauDung / totalQ) * 100);
+    let soCauSai = totalQ - soCauDung;
+    let phanTram = totalQ > 0 ? Math.round((soCauDung / totalQ) * 100) : 0;
     let ketQuaDat = soCauDung >= Math.ceil(totalQ * 0.7);
 
     let examTab = document.getElementById('tab-exam') || document.getElementById('exam') || document.getElementById('tab-3');
@@ -682,15 +777,19 @@ function nopBaiThiThu() {
             <div class="space-y-2">
                 <div class="text-5xl">${ketQuaDat ? '🎉' : '📚'}</div>
                 <h2 class="text-2xl font-bold ${ketQuaDat ? 'text-emerald-600' : 'text-amber-600'}">
-                    ${ketQuaDat ? 'CHÚC MỪNG BẠN ĐÃ ĐÃ THỊ ĐẠT!' : 'BẠN CẦN CỐ GẮNG ÔN TẬP THÊM!'}
+                    ${ketQuaDat ? 'CHÚC MỪNG BẠN ĐÃ THI ĐẠT!' : 'BẠN CẦN CỐ GẮNG ÔN TẬP THÊM!'}
                 </h2>
-                <p class="text-sm text-slate-500">Kết quả bài thi mô phỏng đề thi thật Tokutei Ginou</p>
+                <p class="text-sm text-slate-500">Kết quả ${currentExamLabel} - Tokutei Ginou Ngành Gỗ</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-3 gap-3">
                 <div class="p-4 bg-slate-50 border rounded-xl">
                     <div class="text-3xl font-extrabold text-blue-900">${soCauDung} / ${totalQ}</div>
-                    <div class="text-xs text-slate-600 mt-1">Số câu trả lời đúng</div>
+                    <div class="text-xs text-slate-600 mt-1">Số câu đúng</div>
+                </div>
+                <div class="p-4 bg-red-50/70 border border-red-200 rounded-xl">
+                    <div class="text-3xl font-extrabold text-red-600">${soCauSai}</div>
+                    <div class="text-xs text-red-700 mt-1">Số câu sai</div>
                 </div>
                 <div class="p-4 bg-slate-50 border rounded-xl">
                     <div class="text-3xl font-extrabold ${ketQuaDat ? 'text-emerald-600' : 'text-red-600'}">${phanTram}%</div>
@@ -699,10 +798,15 @@ function nopBaiThiThu() {
             </div>
 
             <div class="p-4 bg-blue-50 text-blue-900 rounded-xl text-xs font-semibold">
-                ${ketQuaDat ? '🌟 Năng lực của bạn đã đạt tiêu chuẩn vượt qua kỳ thi thực tế tại Nhật Bản!' : '💡 Hãy ôn tập thêm phần Từ vựng và Quy trình để nâng cao số câu đúng nhé!'}
+                ${ketQuaDat ? '🌟 Năng lực của bạn đã đạt tiêu chuẩn vượt qua kỳ thi thực tế tại Nhật Bản!' : '💡 Hãy bấm làm lại các câu đã sai bên dưới để nắm chắc kiến thức nhé!'}
             </div>
 
-            <div class="pt-4 flex justify-center gap-3">
+            <div class="pt-4 flex flex-wrap justify-center gap-3">
+                ${soCauSai > 0 ? `
+                    <button onclick="lamLaiCacCauDaSai()" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-xl transition shadow-sm cursor-pointer">
+                        🎯 Làm lại ${soCauSai} câu đã sai
+                    </button>
+                ` : ''}
                 <button onclick="hienThiManHinhChuanBiThiThu()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-sm cursor-pointer">
                     🔄 Làm lại bộ đề mới
                 </button>
@@ -711,6 +815,22 @@ function nopBaiThiThu() {
     `;
 
     examTab.innerHTML = htmlNoiDung;
+}
+
+function lamLaiCacCauDaSai() {
+    if (!window._wrongExamQuestions || window._wrongExamQuestions.length === 0) {
+        alert("🎉 Tuyệt vời! Bạn không có câu nào sai cả!");
+        return;
+    }
+
+    examQuestions = [...window._wrongExamQuestions];
+    examCurrentIndex = 0;
+    examUserAnswers = {};
+    examTimeRemaining = Math.max(600, examQuestions.length * 90);
+    currentExamLabel = `Ôn lại ${examQuestions.length} câu đã sai`;
+
+    khoiDongDongHoThiThu();
+    renderGiaoDienLamBaiThi();
 }
 
 // ================= MODULE 6: QUY TRÌNH SẢN XUẤT =================
