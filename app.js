@@ -69,8 +69,11 @@ const danhSachFileJson = [
 ];
 
 let tatCaDuLieuKho = [];
+let tatCaCauHoi1860 = [];
 let questions = [];
 let currentIndex = 0;
+let currentPracticePage = 1;
+const SO_CAU_MOI_TRANG = 30;
 let score = 0;
 
 // Biến dành riêng cho chế độ Thi Thử (Tab 3)
@@ -167,10 +170,7 @@ function switchTab(rawTabId) {
     } else if (tabId.includes('6') || tabId.includes('process') || tabId.includes('workflow') || tabId.includes('quy') || tabId.includes('trinh')) {
         hienThiGiaoDienQuyTrinh('precut');
     } else if (tabId.includes('2') || tabId.includes('practice')) {
-        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
-        if (questions.length === 0) questions = tatCaDuLieuKho;
-        currentIndex = 0;
-        renderQuestion();
+        hienThiManHinhChonTrangLuyenTap();
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -186,6 +186,9 @@ async function taiTatCaDuLieu() {
                 let danhSach = Array.isArray(data) ? data : (data.questions || data.data || Object.values(data)[0] || []);
                 if (Array.isArray(danhSach) && danhSach.length > 0) {
                     tongHop = tongHop.concat(danhSach);
+                    if (tenFile === "CauHoi_1860.json") {
+                        tatCaCauHoi1860 = danhSach;
+                    }
                 }
             }
         } catch (err) {}
@@ -193,9 +196,159 @@ async function taiTatCaDuLieu() {
 
     if (tongHop.length > 0) {
         tatCaDuLieuKho = tongHop;
-        questions = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
-        if (questions.length === 0) questions = tatCaDuLieuKho;
-        currentIndex = 0;
+        if (tatCaCauHoi1860.length === 0) {
+            tatCaCauHoi1860 = tatCaDuLieuKho.filter(item => (item.NoiDungJP || item.question) && !item.TuVungJP && !item.ID_HinhAnh);
+        }
+        if (tatCaCauHoi1860.length === 0) {
+            tatCaCauHoi1860 = tatCaDuLieuKho;
+        }
+        hienThiManHinhChonTrangLuyenTap();
+    }
+}
+
+// ================= MODULE 2: LUYỆN TẬP PHÂN CHIA 62 TRANG (30 CÂU / TRANG) =================
+function hienThiManHinhChonTrangLuyenTap() {
+    let practiceTab = document.getElementById('tab-practice') || document.getElementById('practice') || document.getElementById('tab-2');
+    if (!practiceTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        practiceTab = tabs[1];
+    }
+    if (!practiceTab) return;
+
+    let tongSoCau = tatCaCauHoi1860.length;
+    let tongSoTrang = Math.max(1, Math.ceil(tongSoCau / SO_CAU_MOI_TRANG));
+
+    let html = `
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-blue-900">✍️ 2. Luyện Tập Theo Trang (練習モード)</h2>
+                    <p class="text-xs text-slate-500">Tổng ${tongSoCau} câu được chia rõ thành ${tongSoTrang} trang (${SO_CAU_MOI_TRANG} câu/trang) — Có dịch tiếng Việt & giải thích</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <label for="select-practice-page" class="text-xs font-bold text-slate-600">Chuyển nhanh:</label>
+                    <select id="select-practice-page" onchange="chonTrangLuyenTap(Number(this.value))" class="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs font-bold text-blue-900 cursor-pointer">
+    `;
+
+    for (let p = 1; p <= tongSoTrang; p++) {
+        let batDau = (p - 1) * SO_CAU_MOI_TRANG + 1;
+        let ketThuc = Math.min(p * SO_CAU_MOI_TRANG, tongSoCau);
+        html += `<option value="${p}" ${p === currentPracticePage ? 'selected' : ''}>Trang ${p} (Câu ${batDau}–${ketThuc})</option>`;
+    }
+
+    html += `
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-[420px] overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+    `;
+
+    for (let p = 1; p <= tongSoTrang; p++) {
+        let batDau = (p - 1) * SO_CAU_MOI_TRANG + 1;
+        let ketThuc = Math.min(p * SO_CAU_MOI_TRANG, tongSoCau);
+        let isCurrent = p === currentPracticePage;
+        html += `
+            <button onclick="chonTrangLuyenTap(${p})" class="p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${isCurrent ? 'bg-blue-700 text-white border-blue-800 shadow-sm' : 'bg-white hover:bg-blue-50 text-slate-800 border-slate-200 hover:border-blue-300'}">
+                <span class="text-sm font-bold">📄 Trang ${p}</span>
+                <span class="text-[11px] mt-1 ${isCurrent ? 'text-blue-100' : 'text-slate-500'}">Câu ${batDau} – ${ketThuc}</span>
+            </button>
+        `;
+    }
+
+    html += `
+            </div>
+        </div>
+    `;
+
+    practiceTab.innerHTML = html;
+}
+
+function chonTrangLuyenTap(soTrang) {
+    let tongSoCau = tatCaCauHoi1860.length;
+    let tongSoTrang = Math.max(1, Math.ceil(tongSoCau / SO_CAU_MOI_TRANG));
+    if (soTrang < 1) soTrang = 1;
+    if (soTrang > tongSoTrang) soTrang = tongSoTrang;
+
+    currentPracticePage = soTrang;
+    let startIdx = (soTrang - 1) * SO_CAU_MOI_TRANG;
+    let endIdx = Math.min(startIdx + SO_CAU_MOI_TRANG, tongSoCau);
+
+    questions = tatCaCauHoi1860.slice(startIdx, endIdx);
+    currentIndex = 0;
+    score = 0;
+
+    renderGiaoDienLamBaiLuyenTap();
+}
+
+function renderGiaoDienLamBaiLuyenTap() {
+    let practiceTab = document.getElementById('tab-practice') || document.getElementById('practice') || document.getElementById('tab-2');
+    if (!practiceTab) {
+        let tabs = document.querySelectorAll('.tab-content');
+        practiceTab = tabs[1];
+    }
+    if (!practiceTab) return;
+
+    let tongSoCau = tatCaCauHoi1860.length;
+    let tongSoTrang = Math.max(1, Math.ceil(tongSoCau / SO_CAU_MOI_TRANG));
+    let cauBatDauTrang = (currentPracticePage - 1) * SO_CAU_MOI_TRANG + 1;
+    let cauKetThucTrang = Math.min(currentPracticePage * SO_CAU_MOI_TRANG, tongSoCau);
+
+    let html = `
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-3">
+                <div>
+                    <h2 class="text-lg font-bold text-blue-900">✍️ Luyện Tập — Trang ${currentPracticePage} / ${tongSoTrang}</h2>
+                    <p class="text-xs text-slate-500">Phạm vi: Câu ${cauBatDauTrang} đến Câu ${cauKetThucTrang}</p>
+                </div>
+                <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <button onclick="hienThiManHinhChonTrangLuyenTap()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold border border-slate-300 cursor-pointer">
+                        📑 Danh sách 62 trang
+                    </button>
+                    <span id="quiz-progress" class="text-xs bg-blue-100 text-blue-800 font-bold px-2.5 py-1.5 rounded-lg">Đang tải...</span>
+                </div>
+            </div>
+
+            <!-- Thanh chọn nhanh 30 câu trong trang hiện tại -->
+            <div class="flex flex-wrap gap-1.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+    `;
+
+    questions.forEach((_, idx) => {
+        let soThuTuTong = cauBatDauTrang + idx;
+        html += `
+            <button onclick="nhayDenCauTrongTrang(${idx})" id="practice-pill-${idx}" class="px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${idx === currentIndex ? 'bg-blue-700 text-white border-blue-800' : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50'}">
+                ${soThuTuTong}
+            </button>
+        `;
+    });
+
+    html += `
+            </div>
+
+            <div id="quiz-box" class="space-y-4 pt-1">
+                <p id="question-text" class="font-semibold text-slate-800 text-base">Đang tải câu hỏi...</p>
+                <div id="options-container" class="space-y-2"></div>
+                <div id="explanation-box" class="hidden p-3 bg-blue-50 border-l-4 border-blue-500 text-sm text-blue-900 rounded"></div>
+            </div>
+
+            <div class="flex flex-wrap justify-between items-center gap-2 mt-6 pt-4 border-t border-slate-100">
+                <button onclick="prevQuestion()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-300 cursor-pointer">⬅️ Câu trước</button>
+                <div class="flex items-center space-x-2">
+                    ${currentPracticePage > 1 ? `<button onclick="chonTrangLuyenTap(${currentPracticePage - 1})" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold cursor-pointer">⏪ Trang ${currentPracticePage - 1}</button>` : ''}
+                    ${currentPracticePage < tongSoTrang ? `<button onclick="chonTrangLuyenTap(${currentPracticePage + 1})" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold cursor-pointer">Trang ${currentPracticePage + 1} ⏩</button>` : ''}
+                </div>
+                <button onclick="nextQuestion()" class="px-4 py-2 bg-blue-700 text-white rounded-lg text-sm font-semibold hover:bg-blue-800 cursor-pointer">Câu tiếp ➡️</button>
+            </div>
+        </div>
+    `;
+
+    practiceTab.innerHTML = html;
+    renderQuestion();
+}
+
+function nhayDenCauTrongTrang(idx) {
+    if (idx >= 0 && idx < questions.length) {
+        currentIndex = idx;
         renderQuestion();
     }
 }
@@ -370,7 +523,7 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= MODULE 3: THI THỬ MÔ PHỎNG ĐỀ THI THẬT (62 BỘ ĐỀ - 35 CÂU - 60 PHÚT) =================
+// ================= MODULE 3: THI THỬ MÔ PHỎNG ĐỀ THI THẬT (62 BỘ ĐỀ - CHỈ TIẾNG NHẬT) =================
 function hienThiManHinhChuanBiThiThu() {
     let examTab = document.getElementById('tab-exam') || 
                   document.getElementById('exam') || 
@@ -387,7 +540,7 @@ function hienThiManHinhChuanBiThiThu() {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6 max-w-3xl mx-auto">
             <div class="text-center space-y-2 border-b pb-4">
                 <h2 class="text-xl font-bold text-blue-900">📝 3. Thi Thử Mô Phỏng Đề Thi Thật (模擬試験モード)</h2>
-                <p class="text-sm text-slate-600">Cấu trúc chuẩn kỳ thi Tokutei Ginou Ngành Gỗ (Phủ kín toàn bộ 1.860 câu):</p>
+                <p class="text-sm text-slate-600">Đề thi chuẩn 100% tiếng Nhật (đã ẩn bản dịch tiếng Việt để rèn phản xạ đi thi):</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -477,7 +630,7 @@ async function batDauThiThu(deSo) {
             ds1860 = Array.isArray(data) ? data : (data.questions || data.data || Object.values(data)[0] || []);
         }
     } catch (e) {}
-    if (ds1860.length === 0) ds1860 = tatCaDuLieuKho;
+    if (ds1860.length === 0) ds1860 = tatCaCauHoi1860;
 
     let startIndex = (deSo - 1) * 30;
     let endIndex = startIndex + 30;
@@ -573,7 +726,7 @@ async function batDauThiThu(deSo) {
         });
     }
 
-    // Tổng hợp đủ 35 câu cho bộ đề
+    // Tổng hợp đủ 35 câu: 30 câu từ 1860 + 2 câu An toàn + 1 câu Tính toán + 2 câu Quy trình
     examQuestions = [...phan1860, ...cauAnToanList, cauTinhToan, ...chonQuyTrinh];
     examCurrentIndex = 0;
     examUserAnswers = {};
@@ -587,52 +740,47 @@ async function batDauThiThu(deSo) {
 function layThongTinHienThiCauThi(q, idx) {
     let tieudeCau = "";
     let noidungJP = "";
-    let noidungVN = "";
     let rawImgUrl = "";
     let options = [];
 
     if (q._loaiCau === 'antoan' || q.DeBaigocJP) {
-        tieudeCau = q.TieuDeCau || "🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Nguy Cơ";
+        tieudeCau = q.TieuDeCau || "🛡️ 安全衛生・画像認識問題";
         noidungJP = q.DeBaigocJP || q.NoiDungJP || "";
-        noidungVN = q.DeBaigocVN || q.NoiDungVN || "";
         rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
         options = [q.LuaChon_A, q.LuaChon_I, q.LuaChon_U, q.LuaChon_E, q.LuaChon_O, q.LuaChon_Ka].filter(Boolean);
     } else if (q._loaiCau === 'tinhtoan' || (q.__2 && !q.NoiDungJP)) {
-        tieudeCau = q.__1 || q.TieuDeBai || "🧮 Bài Tập Tính Toán Thực Chiến Ngành Gỗ";
+        tieudeCau = q.__1 || q.TieuDeBai || "🧮 計算問題 (Keisan Mondai)";
         noidungJP = q.__2 || q.DeBaigoc || q.question || "";
-        noidungVN = q.__4 || q.CacBướcGiai || q.GiaiThich || "";
         rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
         options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
         if (options.length === 0 && q._dapAnChuan) {
             options = [
                 String(q._dapAnChuan),
-                "Đáp án A (Cần kiểm tra lại)",
-                "Đáp án B (Cần kiểm tra lại)",
-                "Đáp án C (Cần kiểm tra lại)"
+                "選択肢 A",
+                "選択肢 B",
+                "選択肢 C"
             ];
         }
     } else if (q._loaiCau === 'quytrinh' || q.tuVungJP) {
-        tieudeCau = "⚙️ Câu hỏi Quy trình sản xuất & Ghép nối";
+        tieudeCau = "⚙️ 製造工程問題";
         noidungJP = q.tuVungJP || "";
-        noidungVN = q.nghiaVN || "";
         rawImgUrl = q.hinhAnh || "";
         options = [
             `Đúng quy trình bước #${q.stt || 'thực tế'}`,
             "Sai thứ tự quy trình sản xuất"
         ];
     } else {
-        tieudeCau = q.TieuDeCau || q.TieuDe || `Câu ${idx + 1}`;
+        tieudeCau = q.TieuDeCau || q.TieuDe || `問題 ${idx + 1}`;
         noidungJP = q.NoiDungJP || q.question || q.DeBaigoc || "";
-        noidungVN = q.NoiDungVN || "";
         rawImgUrl = q.HinhAnhURL || q.LinkAnh || q.Image || "";
         options = q.options || [q.A, q.B, q.C, q.D].filter(Boolean);
     }
 
     if (options.length === 0) {
-        options = ["〇 (Đúng)", "✖ (Sai)"];
+        options = ["〇", "✖"];
     }
 
-    return { tieudeCau, noidungJP, noidungVN, rawImgUrl, options };
+    return { tieudeCau, noidungJP, rawImgUrl, options };
 }
 
 function renderGiaoDienLamBaiThi() {
@@ -643,7 +791,7 @@ function renderGiaoDienLamBaiThi() {
     if (!q) return;
 
     let totalQ = examQuestions.length;
-    let { tieudeCau, noidungJP, noidungVN, rawImgUrl, options } = layThongTinHienThiCauThi(q, examCurrentIndex);
+    let { tieudeCau, noidungJP, rawImgUrl, options } = layThongTinHienThiCauThi(q, examCurrentIndex);
 
     let embedUrl = convertDriveEmbedLink(rawImgUrl);
     let directUrl = convertDriveDirectLink(rawImgUrl);
@@ -657,7 +805,7 @@ function renderGiaoDienLamBaiThi() {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5 max-w-4xl mx-auto">
             <div class="flex justify-between items-center border-b pb-3 flex-wrap gap-2">
                 <div>
-                    <h2 class="text-base font-bold text-blue-900">📝 Đang làm: ${currentExamLabel}</h2>
+                    <h2 class="text-base font-bold text-blue-900">📝 Đang làm: ${currentExamLabel} (模擬試験)</h2>
                     <p class="text-xs text-slate-500">Câu hỏi ${examCurrentIndex + 1} / ${totalQ}</p>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -672,7 +820,7 @@ function renderGiaoDienLamBaiThi() {
             <div class="p-5 bg-gradient-to-r from-blue-50/30 to-slate-50 border border-slate-200 rounded-xl space-y-4">
                 <div class="flex justify-between items-center">
                     <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-bold">${tieudeCau}</span>
-                    <span class="text-xs text-slate-500 font-semibold">Trang ${q.TrangSo || 'Mô phỏng'}</span>
+                    <span class="text-xs text-slate-500 font-semibold">問題 ${examCurrentIndex + 1}</span>
                 </div>
 
                 ${embedUrl ? `
@@ -686,13 +834,12 @@ function renderGiaoDienLamBaiThi() {
                     </div>
                 ` : ''}
 
-                <div class="space-y-2 bg-white p-4 rounded-lg border border-slate-100">
+                <div class="bg-white p-4 rounded-lg border border-slate-100">
                     <div class="text-slate-900 font-bold text-base whitespace-pre-line">🇯🇵 ${noidungJP}</div>
-                    ${noidungVN ? `<div class="text-slate-600 text-sm italic whitespace-pre-line border-t pt-2">🇻🇳 ${noidungVN}</div>` : ''}
                 </div>
 
                 <div class="space-y-2">
-                    <p class="text-xs font-bold text-slate-500 uppercase">👉 Chọn đáp án của bạn:</p>
+                    <p class="text-xs font-bold text-slate-500 uppercase">👉 解答を選択してください (Chọn đáp án):</p>
                     <div class="grid grid-cols-1 gap-2">
     `;
 
@@ -1213,12 +1360,27 @@ function renderQuestion() {
     if (!questions || questions.length === 0) return;
     let q = questions[currentIndex];
     if (q.TuVungJP || q.ID_HinhAnh) { nextQuestion(); return; }
+
+    let soThuTuTong = (currentPracticePage - 1) * SO_CAU_MOI_TRANG + currentIndex + 1;
     let progressEl = document.getElementById('quiz-progress');
-    if (progressEl) progressEl.innerText = `[${q.TrangSo || 'Ôn tập'}] - Câu ${currentIndex + 1} / ${questions.length}`;
+    if (progressEl) progressEl.innerText = `Trang ${currentPracticePage} — Câu ${currentIndex + 1}/${questions.length} (Câu số ${soThuTuTong})`;
+
+    // Cập nhật nút số câu đang chọn trong thanh chọn nhanh của trang
+    questions.forEach((_, idx) => {
+        let pill = document.getElementById(`practice-pill-${idx}`);
+        if (pill) {
+            if (idx === currentIndex) {
+                pill.className = "px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer bg-blue-700 text-white border-blue-800";
+            } else {
+                pill.className = "px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer bg-white text-slate-700 border-slate-200 hover:bg-blue-50";
+            }
+        }
+    });
+
     let questionTextEl = document.getElementById('question-text');
     if (questionTextEl) {
         questionTextEl.innerHTML = `
-            <span class="text-blue-700 font-bold text-base">${q.TieuDeCau || q.TieuDe || ""}</span><br>
+            <span class="text-blue-700 font-bold text-base">${q.TieuDeCau || q.TieuDe || `Câu ${soThuTuTong}`}</span><br>
             <div class="my-2 text-slate-900 font-semibold text-base whitespace-pre-line">${q.NoiDungJP || q.question || q.DeBaigoc || ""}</div>
             <div class="text-slate-500 text-sm italic">${q.NoiDungVN || ""}</div>
         `;
@@ -1269,7 +1431,14 @@ function nextQuestion() {
         currentIndex++;
         renderQuestion();
     } else {
-        alert(`🎉 Chúc mừng bạn đã hoàn thành! Tổng số câu đúng: ${score} / ${questions.length}`);
+        let tongSoTrang = Math.max(1, Math.ceil(tatCaCauHoi1860.length / SO_CAU_MOI_TRANG));
+        if (currentPracticePage < tongSoTrang) {
+            if (confirm(`🎉 Bạn đã hoàn thành Trang ${currentPracticePage} (Đúng ${score}/${questions.length} câu).\nChuyển tiếp sang Trang ${currentPracticePage + 1} nhé?`)) {
+                chonTrangLuyenTap(currentPracticePage + 1);
+            }
+        } else {
+            alert(`🎉 Chúc mừng bạn đã hoàn thành trang cuối cùng! Số câu đúng trang này: ${score} / ${questions.length}`);
+        }
     }
 }
 
