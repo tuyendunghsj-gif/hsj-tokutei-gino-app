@@ -370,7 +370,7 @@ function hienThiNhanDangAnToan(danhSach) {
     safetyTab.innerHTML = htmlNoiDung;
 }
 
-// ================= MODULE 3: THI THỬ MÔ PHỎNG ĐỀ THI THẬT (20 BỘ ĐỀ - 35 CÂU - 60 PHÚT) =================
+// ================= MODULE 3: THI THỬ MÔ PHỎNG ĐỀ THI THẬT (62 BỘ ĐỀ - 35 CÂU - 60 PHÚT) =================
 function hienThiManHinhChuanBiThiThu() {
     let examTab = document.getElementById('tab-exam') || 
                   document.getElementById('exam') || 
@@ -387,7 +387,7 @@ function hienThiManHinhChuanBiThiThu() {
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6 max-w-3xl mx-auto">
             <div class="text-center space-y-2 border-b pb-4">
                 <h2 class="text-xl font-bold text-blue-900">📝 3. Thi Thử Mô Phỏng Đề Thi Thật (模擬試験モード)</h2>
-                <p class="text-sm text-slate-600">Cấu trúc chuẩn kỳ thi Tokutei Ginou Ngành Gỗ:</p>
+                <p class="text-sm text-slate-600">Cấu trúc chuẩn kỳ thi Tokutei Ginou Ngành Gỗ (Phủ kín toàn bộ 1.860 câu):</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
@@ -400,29 +400,31 @@ function hienThiManHinhChuanBiThiThu() {
                     <div class="text-xs text-slate-600 mt-1">Thời gian làm bài có đồng hồ</div>
                 </div>
                 <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                    <div class="text-2xl font-bold text-emerald-800">20 Bộ Đề</div>
-                    <div class="text-xs text-slate-600 mt-1">Lấy ngẫu nhiên từ kho dữ liệu</div>
+                    <div class="text-2xl font-bold text-emerald-800">62 Bộ Đề</div>
+                    <div class="text-xs text-slate-600 mt-1">Chia đều trọn bộ 1.860 câu</div>
                 </div>
             </div>
 
             <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2 text-xs text-slate-700">
-                <div class="font-bold text-slate-900">📌 Cấu trúc chi tiết bộ đề:</div>
-                <div>• <strong>Câu 1 đến Câu 32:</strong> Kiến thức chung & chuyên ngành gỗ (Lọc ngẫu nhiên từ 1860 câu).</div>
-                <div>• <strong>Câu 33:</strong> Câu hỏi nhận dạng an toàn / hình ảnh nguy cơ.</div>
-                <div>• <strong>Câu 34:</strong> Bài tập tính toán thực chiến ngành gỗ.</div>
-                <div>• <strong>Câu 35:</strong> Câu hỏi quy trình sản xuất / ghép nối chuyên ngành.</div>
+                <div class="font-bold text-slate-900">📌 Cấu trúc chi tiết từng bộ đề (Không trùng câu giữa các đề):</div>
+                <div>• <strong>Câu 1 đến Câu 30:</strong> Kiến thức chung & chuyên ngành gỗ (Mỗi đề 30 câu riêng biệt từ kho 1.860 câu).</div>
+                <div>• <strong>Câu 31 & Câu 32:</strong> 2 câu nhận dạng an toàn / hình ảnh nguy cơ.</div>
+                <div>• <strong>Câu 33:</strong> 1 bài tập tính toán thực chiến ngành gỗ.</div>
+                <div>• <strong>Câu 34 & Câu 35:</strong> 2 câu quy trình sản xuất / ghép nối chuyên ngành.</div>
             </div>
 
             <div class="space-y-3">
-                <label class="block text-sm font-bold text-slate-800 text-center">🎯 Chọn bộ đề thi thử muốn làm:</label>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-2 max-h-[220px] overflow-y-auto p-2 border rounded-xl">
+                <label class="block text-sm font-bold text-slate-800 text-center">🎯 Chọn bộ đề thi thử muốn làm (Đề 1 → Đề 62):</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-[300px] overflow-y-auto p-2 border rounded-xl bg-slate-50/50">
     `;
 
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= 62; i++) {
+        let cauBatDau = (i - 1) * 30 + 1;
+        let cauKetThuc = i * 30;
         htmlNoiDung += `
-            <button onclick="batDauThiThu(${i})" class="p-3 bg-slate-50 hover:bg-blue-600 hover:text-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 transition shadow-2xs cursor-pointer flex flex-col items-center justify-center">
+            <button onclick="batDauThiThu(${i})" class="p-3 bg-white hover:bg-blue-600 hover:text-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 transition shadow-2xs cursor-pointer flex flex-col items-center justify-center">
                 <span>Đề số ${i}</span>
-                <span class="text-[10px] font-normal opacity-75">35 câu • 60 phút</span>
+                <span class="text-[10px] font-normal opacity-75">Câu ${cauBatDau}–${cauKetThuc} + 5 chuyên đề</span>
             </button>
         `;
     }
@@ -464,9 +466,9 @@ async function batDauThiThu(deSo) {
     }
     if (!examTab) return;
 
-    examTab.innerHTML = `<div class="p-10 text-center text-slate-600 font-bold">⏳ Đang khởi tạo Bộ đề số ${deSo} (Trộn đề chuẩn hóa)...</div>`;
+    examTab.innerHTML = `<div class="p-10 text-center text-slate-600 font-bold">⏳ Đang khởi tạo Bộ đề số ${deSo} / 62...</div>`;
 
-    // 1. Lấy 32 câu từ CauHoi_1860.json
+    // 1. Lấy đúng cụm 30 câu tương ứng với Đề số (Đề 1: 0-29, Đề 2: 30-59, ..., Đề 62: 1830-1859)
     let ds1860 = [];
     try {
         let res = await fetch('./CauHoi_1860.json');
@@ -476,13 +478,23 @@ async function batDauThiThu(deSo) {
         }
     } catch (e) {}
     if (ds1860.length === 0) ds1860 = tatCaDuLieuKho;
-    let shuffled1860 = [...ds1860].sort(() => Math.random() - 0.5).slice(0, 32).map(q => ({
+
+    let startIndex = (deSo - 1) * 30;
+    let endIndex = startIndex + 30;
+    let cum30Cau = ds1860.slice(startIndex, endIndex);
+
+    if (cum30Cau.length < 30 && ds1860.length > 0) {
+        let boSung = [...ds1860].sort(() => Math.random() - 0.5).slice(0, 30 - cum30Cau.length);
+        cum30Cau = cum30Cau.concat(boSung);
+    }
+
+    let phan1860 = [...cum30Cau].sort(() => Math.random() - 0.5).map(q => ({
         ...q,
         _loaiCau: '1860',
         _dapAnChuan: q.DapAn || q.answer || q.DapAnDung || ""
     }));
 
-    // 2. Lấy 1 câu từ NhanDangHinhAnh.json (Câu 33)
+    // 2. Lấy 2 câu từ NhanDangHinhAnh.json (Câu 31 & 32)
     let dsAnToan = [];
     try {
         let res = await fetch('./NhanDangHinhAnh.json');
@@ -491,14 +503,15 @@ async function batDauThiThu(deSo) {
             dsAnToan = Array.isArray(data) ? data : (data.data || data.questions || Object.values(data)[0] || []);
         }
     } catch (e) {}
-    let rawAnToan = dsAnToan.length > 0 ? dsAnToan[Math.floor(Math.random() * dsAnToan.length)] : shuffled1860[0];
-    let cauAnToan = {
-        ...rawAnToan,
+    let chonAnToan = [...dsAnToan].sort(() => Math.random() - 0.5).slice(0, 2);
+    while (chonAnToan.length < 2) chonAnToan.push(phan1860[chonAnToan.length]);
+    let cauAnToanList = chonAnToan.map(raw => ({
+        ...raw,
         _loaiCau: 'antoan',
-        _dapAnChuan: rawAnToan.DapAn || rawAnToan.answer || rawAnToan.DapAnDung || ""
-    };
+        _dapAnChuan: raw.DapAn || raw.answer || raw.DapAnDung || ""
+    }));
 
-    // 3. Lấy 1 câu từ BaiTapTinhToan.json (Câu 34)
+    // 3. Lấy 1 câu từ BaiTapTinhToan.json (Câu 33)
     let dsTinhToan = [];
     try {
         let res = await fetch('./BaiTapTinhToan.json');
@@ -508,7 +521,7 @@ async function batDauThiThu(deSo) {
             dsTinhToan = arr.filter(item => item.__2 || item.DeBaigoc || item.question);
         }
     } catch (e) {}
-    let rawTinhToan = dsTinhToan.length > 0 ? dsTinhToan[Math.floor(Math.random() * dsTinhToan.length)] : shuffled1860[1];
+    let rawTinhToan = dsTinhToan.length > 0 ? dsTinhToan[Math.floor(Math.random() * dsTinhToan.length)] : phan1860[0];
     let dapAnTinhToan = rawTinhToan.__5 || rawTinhToan.DapAnDung || rawTinhToan.answer || rawTinhToan.DapAn || "";
     let cauTinhToan = {
         ...rawTinhToan,
@@ -516,7 +529,7 @@ async function batDauThiThu(deSo) {
         _dapAnChuan: dapAnTinhToan
     };
 
-    // 4. Lấy 1 câu từ 1 trong 7 file Quy Trình (Câu 35)
+    // 4. Lấy 2 câu từ 7 file Quy Trình (Câu 34 & 35)
     let fileQuyTrinhList = [
         "GhepNoi_Precut.json",
         "GhepNoi_Chip.json",
@@ -526,43 +539,46 @@ async function batDauThiThu(deSo) {
         "GhepNoi_Shuuseizai.json",
         "GhepNoi_Seizai.json"
     ];
-    let chonFileQT = fileQuyTrinhList[Math.floor(Math.random() * fileQuyTrinhList.length)];
-    let dsQuyTrinhItem = [];
-    try {
-        let res = await fetch(`./${chonFileQT}`);
-        if (res.ok) {
-            let data = await res.json();
-            if (Array.isArray(data) && data.length > 1) {
-                dsQuyTrinhItem = data.slice(1).map((item, idx) => {
-                    let values = Object.values(item);
-                    let buocSo = values[0] || (idx + 1);
-                    return {
-                        stt: buocSo,
-                        hinhAnh: values[1] || "",
-                        tuVungJP: values[2] || "",
-                        nghiaVN: values[3] || "",
-                        giaiThich: values[4] || "",
-                        _loaiCau: 'quytrinh',
-                        _dapAnChuan: `Đúng quy trình bước #${buocSo}`
-                    };
-                }).filter(item => item.tuVungJP);
+    let dsQuyTrinhTong = [];
+    for (let tenFile of fileQuyTrinhList) {
+        try {
+            let res = await fetch(`./${tenFile}`);
+            if (res.ok) {
+                let data = await res.json();
+                if (Array.isArray(data) && data.length > 1) {
+                    let items = data.slice(1).map((item, idx) => {
+                        let values = Object.values(item);
+                        let buocSo = values[0] || (idx + 1);
+                        return {
+                            stt: buocSo,
+                            hinhAnh: values[1] || "",
+                            tuVungJP: values[2] || "",
+                            nghiaVN: values[3] || "",
+                            giaiThich: values[4] || "",
+                            _loaiCau: 'quytrinh',
+                            _dapAnChuan: `Đúng quy trình bước #${buocSo}`
+                        };
+                    }).filter(item => item.tuVungJP);
+                    dsQuyTrinhTong = dsQuyTrinhTong.concat(items);
+                }
             }
-        }
-    } catch (e) {}
-    let cauQuyTrinh = dsQuyTrinhItem.length > 0
-        ? dsQuyTrinhItem[Math.floor(Math.random() * dsQuyTrinhItem.length)]
-        : {
-            ...shuffled1860[2],
+        } catch (e) {}
+    }
+    let chonQuyTrinh = [...dsQuyTrinhTong].sort(() => Math.random() - 0.5).slice(0, 2);
+    while (chonQuyTrinh.length < 2) {
+        chonQuyTrinh.push({
+            ...phan1860[chonQuyTrinh.length + 2],
             _loaiCau: 'quytrinh',
-            _dapAnChuan: shuffled1860[2]._dapAnChuan
-        };
+            _dapAnChuan: phan1860[chonQuyTrinh.length + 2]._dapAnChuan
+        });
+    }
 
     // Tổng hợp đủ 35 câu cho bộ đề
-    examQuestions = [...shuffled1860, cauAnToan, cauTinhToan, cauQuyTrinh];
+    examQuestions = [...phan1860, ...cauAnToanList, cauTinhToan, ...chonQuyTrinh];
     examCurrentIndex = 0;
     examUserAnswers = {};
     examTimeRemaining = 3600; // 60 phút
-    currentExamLabel = `Bộ đề số ${deSo}`;
+    currentExamLabel = `Bộ đề số ${deSo} / 62`;
 
     khoiDongDongHoThiThu();
     renderGiaoDienLamBaiThi();
@@ -575,7 +591,7 @@ function layThongTinHienThiCauThi(q, idx) {
     let rawImgUrl = "";
     let options = [];
 
-    if (q._loaiCau === 'antoan' || (idx === 32 && q.DeBaigocJP)) {
+    if (q._loaiCau === 'antoan' || q.DeBaigocJP) {
         tieudeCau = q.TieuDeCau || "🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Nguy Cơ";
         noidungJP = q.DeBaigocJP || q.NoiDungJP || "";
         noidungVN = q.DeBaigocVN || q.NoiDungVN || "";
