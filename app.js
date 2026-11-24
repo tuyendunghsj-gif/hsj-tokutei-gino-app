@@ -1,8 +1,64 @@
+// ================= HỆ THỐNG BẢO VỆ BẢN QUYỀN & MÃ ĐĂNG NHẬP =================
+const DANH_SACH_MA_HOC_VIEN = [
+    "HSJ2026",          // Mã dùng chung cho khóa học
+    "WOOD888",          // Mã dự phòng
+    "HV01_TRANG",       // Học viên 1
+    "HV02_TRANG",       // Học viên 2
+    "HV03_TRANG",       // Học viên 3
+    "HV04_TRANG",       // Học viên 4
+    "HV05_TRANG",       // Học viên 5
+    "HV06_TRANG",       // Học viên 6
+    "HV07_TRANG"        // Học viên 7
+];
+
+function kichHoatChongCopy() {
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', event => {
+        if (event.ctrlKey && ['c', 'C', 'u', 'U', 's', 'S'].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
+}
+
+function moKhoaUngDung(phatLoiChao = true) {
+    const splashScreen = document.getElementById('splash-screen');
+    if (splashScreen) {
+        splashScreen.style.opacity = '0';
+        setTimeout(() => {
+            splashScreen.style.display = 'none';
+        }, 500);
+    }
+    if (phatLoiChao && typeof phatAmThanhChao === 'function') {
+        setTimeout(() => phatAmThanhChao(), 400);
+    }
+}
+
+function kiemTraMaDangNhap() {
+    const inputEl = document.getElementById('access-code-input');
+    const errorEl = document.getElementById('login-error-msg');
+    if (!inputEl) return;
+
+    const maNhapVao = inputEl.value.trim();
+
+    if (DANH_SACH_MA_HOC_VIEN.includes(maNhapVao)) {
+        sessionStorage.setItem('hsj_wood_authenticated', 'true');
+        if (errorEl) errorEl.classList.add('hidden');
+        inputEl.classList.remove('border-red-500');
+        moKhoaUngDung(true);
+    } else {
+        if (errorEl) errorEl.classList.remove('hidden');
+        inputEl.classList.add('border-red-500');
+        inputEl.value = '';
+        inputEl.focus();
+    }
+}
+
 // ================= HỆ THỐNG KẾT NỐI TOÀN DIỆN - HSJ WOOD APP =================
 const danhSachFileJson = [
     "CauHoi_1860.json",
     "TuVung.json",
     "NhanDangHinhAnh.json",
+    "BaiTapTinhToan.json",
     "GhepNoi_Precut.json",
     "GhepNoi_Chip.json",
     "GhepNoi_Flooring.json",
@@ -36,16 +92,22 @@ let duLieuQuyTrinhKho = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+    kichHoatChongCopy();
+    if (sessionStorage.getItem('hsj_wood_authenticated') === 'true') {
+        moKhoaUngDung(false);
+    }
+
     console.log("🚀 Đang khởi động hệ thống nạp dữ liệu HSJ Wood...");
     await taiTatCaDuLieu();
     await taiRiengTatCaFileQuyTrinh();
 });
 
 function enterApp() {
-    const splashScreen = document.getElementById('splash-screen');
-    if (splashScreen) {
-        splashScreen.style.opacity = '0';
-        setTimeout(() => { splashScreen.style.display = 'none'; }, 700);
+    if (sessionStorage.getItem('hsj_wood_authenticated') === 'true') {
+        moKhoaUngDung(false);
+    } else {
+        const inputEl = document.getElementById('access-code-input');
+        if (inputEl) inputEl.focus();
     }
 }
 
@@ -451,8 +513,7 @@ async function batDauThiThu(deSo) {
     let cauTinhToan = {
         ...rawTinhToan,
         _loaiCau: 'tinhtoan',
-        _dapAnChuan: dapAnTinhToan,
-        _dapAnPhu: dapAnTinhToan ? dapAnTinhToan : "Đáp án khác A"
+        _dapAnChuan: dapAnTinhToan
     };
 
     // 4. Lấy 1 câu từ 1 trong 7 file Quy Trình (Câu 35)
@@ -514,7 +575,7 @@ function layThongTinHienThiCauThi(q, idx) {
     let rawImgUrl = "";
     let options = [];
 
-    if (q._loaiCau === 'antoan' || idx === 32 && q.DeBaigocJP) {
+    if (q._loaiCau === 'antoan' || (idx === 32 && q.DeBaigocJP)) {
         tieudeCau = q.TieuDeCau || "🛡️ 5. An Toàn Vệ Sinh & Nhận Dạng Nguy Cơ";
         noidungJP = q.DeBaigocJP || q.NoiDungJP || "";
         noidungVN = q.DeBaigocVN || q.NoiDungVN || "";
@@ -633,7 +694,6 @@ function renderGiaoDienLamBaiThi() {
         `;
     });
 
-    // Lưu tạm danh sách lựa chọn của câu hiện tại để bấm chọn không bị lỗi ký tự đặc biệt
     window._currentExamOptions = options.map(opt => typeof opt === 'object' ? (opt.text || JSON.stringify(opt)) : String(opt));
 
     htmlNoiDung += `
@@ -708,7 +768,6 @@ function xacNhanNopBai() {
 function chuanHoaDapAn(str) {
     if (!str) return "";
     let s = String(str).trim();
-    // Chuẩn hóa các ký tự đúng/sai phổ biến
     if (/^(〇|◯|○|o|true|đúng)/i.test(s) && s.length <= 12 && !s.includes("Sai")) {
         return "DUNG";
     }
@@ -733,7 +792,6 @@ function kiemTraCauTraLoiDung(userAns, q) {
 
     if (uRaw === cRaw) return true;
 
-    // Nếu đáp án đúng là ký tự ngắn như "a", "b", "c", "d", "ア", "イ", "ウ", "エ"
     if (cRaw.length <= 2) {
         return uRaw === cRaw || uRaw.startsWith(cRaw + ".") || uRaw.startsWith(cRaw + ")") || uRaw.startsWith(cRaw + " ") || uRaw.startsWith(cRaw + ":");
     }
@@ -749,20 +807,14 @@ function nopBaiThiThu() {
 
     examQuestions.forEach((q, index) => {
         let userAns = examUserAnswers[index] || "";
-        let isDung = kiemTraCauTraLoiDung(userAns, q);
-        if (isDung) {
+        if (kiemTraCauTraLoiDung(userAns, q)) {
             soCauDung++;
         } else {
-            danhSachCauSai.push({
-                index: index,
-                question: q,
-                userAns: userAns
-            });
+            danhSachCauSai.push(q);
         }
     });
 
-    // Lưu danh sách câu sai vào biến toàn cục để nút "Làm lại câu sai" sử dụng
-    window._wrongExamQuestions = danhSachCauSai.map(item => item.question);
+    window._wrongExamQuestions = danhSachCauSai;
 
     let totalQ = examQuestions.length;
     let soCauSai = totalQ - soCauDung;
